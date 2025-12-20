@@ -23,11 +23,11 @@ class Ingredient:
     def __init__(self, ingredient_data):
         self.name = ingredient_data["Name"]
         self.weight = ingredient_data["Weight"]
-        self.tallied_weight = 0
+        self.totaled_weight = 0
 
 
-    def calculate_weight(self, total_weight):
-        self.tallied_weight = round((total_weight / 4) * self.weight, 2)
+    def total_weight(self, total_weight):
+        self.totaled_weight = round((total_weight / 4) * self.weight, 2)
 
 
 def create_ingredient_objects(_all_ingredients_data):

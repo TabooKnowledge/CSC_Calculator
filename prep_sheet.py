@@ -34,7 +34,7 @@ class PrepSheet:
             print(f"Line Mix Need: {flavor.line_mix_needed}")
             print(f"Chicken weight {flavor.chicken_weight}")
             for ingredient in flavor.ingredients:
-                print(f"{ingredient.name} weight {ingredient.weight}")
+                print(f"{ingredient.name} weight {ingredient.totaled_weight}")
         if self.error_not_enough_chicken == 1:
             print("\n********** ERROR **********")
             print(f"Total chicken used exceeds chicken on hand!!!")

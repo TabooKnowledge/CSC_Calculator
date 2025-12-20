@@ -97,7 +97,7 @@ class Flavor:
         self.large_quick_par = flavor_data["Large Quick Par"]
         self.small_quick_par = flavor_data["Small Quick Par"]
         self.line_mix_par = flavor_data["Line Mix Par"]
-        self.par_weight = 0
+        self.totaled_par_weight = 0
         self.calculate_par_weight()
         self.large_quick_on_hand = 0
         self.small_quick_on_hand = 0
@@ -111,15 +111,15 @@ class Flavor:
 
 
     def calculate_par_weight(self):
-        self.par_weight = self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par
+        self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
 
 
     def calculate_needed(self):
-        self.calculate_targets()
+        self.calculate_prep_numbers()
         self.calculate_total_mix_weight()
 
 
-    def calculate_targets(self):
+    def calculate_prep_numbers(self):
         self.large_quick_needed = max(0, self.large_quick_par - self.large_quick_on_hand)
         self.small_quick_needed = max(0, self.small_quick_par - self.small_quick_on_hand)
         self.line_mix_needed = max(0, self.line_mix_par - self.line_mix_on_hand)
@@ -127,7 +127,14 @@ class Flavor:
 
     def calculate_total_mix_weight(self):
         on_hand = self.large_quick_on_hand + self.small_quick_on_hand / 2 + self.line_mix_on_hand
-        self.total_mix_weight = math.ceil(self.par_weight - on_hand)
+        self.total_mix_weight = math.ceil(self.totaled_par_weight - on_hand)
+        self.total_ingredient_weight()
+
+    def total_ingredient_weight(self):
+        self.totaled_ingredient_weight = 0
+        for ingredient in self.ingredients:
+            ingredient.total_weight(self.total_mix_weight)
+            self.totaled_ingredient_weight += ingredient.weight
 
 
 def create_flavor_objects(_all_flavor_data):
@@ -139,3 +146,4 @@ def create_flavor_objects(_all_flavor_data):
 
 all_flavors = create_flavor_objects(flavor_data_list)
 flavors_by_name = {flavor.name: flavor for flavor in all_flavors}
+all_flavors[2].calculate_prep_numbers()
