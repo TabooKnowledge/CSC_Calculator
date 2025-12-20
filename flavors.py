@@ -25,7 +25,7 @@ flavor_data_list = {
         "Ingredients": {ingredients["Lauryn's Mix"]},
     },
     "FF": {
-        "Name": "Fruity France",
+        "Name": "Fruity Fran",
         "Large Quick Par": 4,
         "Small Quick Par": 4,
         "Line Mix Par": 12,
@@ -146,4 +146,4 @@ def create_flavor_objects(_all_flavor_data):
 
 all_flavors = create_flavor_objects(flavor_data_list)
 flavors_by_name = {flavor.name: flavor for flavor in all_flavors}
-all_flavors[2].calculate_prep_numbers()
+all_flavors[2].calculate_needed()

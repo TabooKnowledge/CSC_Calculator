@@ -26,8 +26,8 @@ class Ingredient:
         self.totaled_weight = 0
 
 
-    def total_weight(self, total_weight):
-        self.totaled_weight = round((total_weight / 4) * self.weight, 2)
+    def total_weight(self, mix_weight):
+        self.totaled_weight = round((mix_weight / 4) * self.weight, 2)
 
 
 def create_ingredient_objects(_all_ingredients_data):
