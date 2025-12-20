@@ -1,5 +1,3 @@
-
-
 ingredient_data_list = [
     {"Name": "Cranberries",   "Weight": .28},
     {"Name": "Almonds",       "Weight": .40},
