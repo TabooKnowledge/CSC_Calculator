@@ -1,9 +1,10 @@
 import tkinter as tk
 from tkinter import font as tkfont
+from PIL import Image, ImageTk
 from prep_sheet import prep_sheet
 import os
 
-#Testingthisout
+
 all_resolution_data = {
     "android": {
         "base_font_size": 8,
@@ -42,7 +43,6 @@ class TkManager:
         self.buttons = []
 
 
-
 class UiCompiler:
     def __init__(self, all_res_data):
         self.base_font_size = 0
@@ -66,6 +66,9 @@ class UiCompiler:
             self.resolution_data = self.all_resolution_data["android"]
         elif os.name == "nt":
             self.resolution_data = self.all_resolution_data["windows"]
+        else:
+            print("Unsupported OS")
+            exit(1)
 
     def set_ui_properties(self):
         self.base_font_size = self.resolution_data["base_font_size"]
@@ -93,7 +96,7 @@ class UiCompiler:
 
 
 
-def fit_text_to_button(self, btn, text, max_width_px):
+def fit_text_to_button(btn, text, max_width_px):
     f = tkfont.Font(font=btn['font'])
     size = f.actual()['size']
     while f.measure(text) > max_width_px and size > 1:

@@ -4,7 +4,7 @@ ingredient_data_list = [
     {"name": "pecans",        "weight": .27},
     {"name": "grapes",        "weight": .35},
     {"name": "apples",        "weight": .30},
-    {"name": "lauryns_mix",  "weight": .20},
+    {"name": "lauryns_mix",   "weight": .20},
     {"name": "pineapples",    "weight": .50},
     {"name": "bacon",         "weight": .28},
     {"name": "ranch",         "weight": .55},
@@ -16,7 +16,7 @@ ingredient_data_list = [
     {"name": "barbecue",      "weight": .50},
     {"name": "onions",        "weight": .40},
     {"name": "classic",       "weight": .00},
-    {"name": "kickin",       "weight": .00},
+    {"name": "kickin",        "weight": .00},
 ]
 
 
