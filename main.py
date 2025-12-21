@@ -24,7 +24,7 @@ all_resolution_data = {
         "btn_width": 15,
         "btn_height": 2,
         "btn_start_x": .04,
-        "btn_start_y": .05,
+        "btn_start_y": .025,
         "btn_step_y": .25,
         "btn_step_x": .4,
         "btn_wraplength": .1,
@@ -49,8 +49,7 @@ class TkManager:
     def initialize(self):
         self.initialize_canvas()
         self.label = tk.Label(self.root, text="Chicken Salad Production Software", font=("Arial", 12))
-        self.label.place(relx=0.5, rely=0.025, anchor="center")
-        self.buttons = []
+        self.label.place(relx=0.5, rely=.0125, anchor="center")
 
     def initialize_canvas(self):
         self.create_canvas()
@@ -70,7 +69,7 @@ class TkManager:
         self.canvas.photo = self.bg_img
 
 
-class UiCompiler:
+class UiManager:
     def __init__(self, all_res_data, _tk_manager):
         self.tk_manager = _tk_manager
         self.base_font_size = 0
@@ -144,9 +143,11 @@ class UiCompiler:
 
 
 class Button:
-    def __init__(self, _tk_manager, canvas, data, font):
+    def __init__(self, _tk_manager, _ui_manager, canvas, data, font):
         self.tk_manager = _tk_manager
+        self.ui_manager = _ui_manager
         self.resolution_data = _tk_manager.resolution_data
+        self.index = 0
         self.x = 0
         self.y = 0
         self.w = self.resolution_data["btn_width"]
@@ -161,17 +162,15 @@ class Button:
         self.command_func  = None
         self.tk_widget = None
 
-    def initialize(self):
-        self.x = 50
-        self.y = 50
-        #self.x = self.data["x"]
-        #self.y = self.data["y"]
+    def initialize(self, i):
         self.text = self.data.name
         self.image_name = self.data.image_name
         #self.command_func = self.data["command_func"]
+        self.assign_position(i)
         self.create_image()
         self.create_widget()
         self.create_window()
+        self.tk_manager.buttons.append(self)
 
     def create_image(self):
         scrn_w = self.tk_manager.w
@@ -183,14 +182,22 @@ class Button:
     def create_widget(self):
         self.tk_widget = tk.Button(
         self.canvas,
-        text = self.text,
-        #width = self.w,
-        #height = self.h,
-        font = self.font,
-        command = self.on_click,
-        image = self.image
+            text = self.text,
+            width = self.image.width(),
+            height = self.image.height(),
+            font = self.font,
+            command = self.on_click,
+            image = self.image,
+            compound = "center",
+            fg = "black",
+            wraplength = self.image.width(),
+    )
 
-)
+    def assign_position(self, i):
+        column = (self.ui_manager.btn_step_y * i) // 1
+        self.x = (self.ui_manager.btn_start_x + column * self.ui_manager.btn_step_x) * self.tk_manager.w
+        self.y = (self.ui_manager.btn_start_y + (self.ui_manager.btn_step_y * i) % 1) * self.tk_manager.h
+
     def create_window(self):
         self.canvas.create_window(
             self.x,
@@ -200,6 +207,7 @@ class Button:
         )
 
     def on_click(self):
+        print(f"Clicked {self.text}")
         if self.command_func  is not None:
             self.command_func ()
 
@@ -213,8 +221,9 @@ def on_flavor_click(_flavor):
 
 tk_manager = TkManager()
 tk_manager.initialize()
-ui_compiler = UiCompiler(all_resolution_data, tk_manager)
-ui_compiler.initialize_ui()
-btn = Button(tk_manager, tk_manager.canvas,prep_sheet.all_flavors[0],"Arial")
-btn.initialize()
+ui_manager = UiManager(all_resolution_data, tk_manager)
+ui_manager.initialize_ui()
+for i, flavor in enumerate(prep_sheet.all_flavors):
+    btn = Button(tk_manager, ui_manager, tk_manager.canvas,flavor,"Arial")
+    btn.initialize(i)
 tk_manager.root.mainloop()

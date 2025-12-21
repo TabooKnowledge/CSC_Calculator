@@ -20,7 +20,7 @@ flavor_data_list = {
         "small_quick_par": 9,
         "line_mix_par": 28,
         "ingredients": {ingredients["apples"], ingredients["pecans"], ingredients["grapes"]},
-        "image_name": "cranberry_kelli.png",
+        "image_name": "fancy_nancy.png",
 
     },
     "llb": {
@@ -30,7 +30,7 @@ flavor_data_list = {
         "small_quick_par": 3,
         "line_mix_par": 12,
         "ingredients": {ingredients["lauryns_mix"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "lauryns_lemon_basil.png"
     },
     "ff": {
         "tag": "flavor_dict",
@@ -39,7 +39,7 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["pineapples"], ingredients["pecans"], ingredients["grapes"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "fruity_fran.png"
     },
     "cc": {
         "tag": "flavor_dict",
@@ -48,7 +48,7 @@ flavor_data_list = {
         "small_quick_par": 9,
         "line_mix_par": 24,
         "ingredients": {ingredients["classic"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "classic_carol.png"
     },
     "ss": {
         "tag": "flavor_dict",
@@ -57,7 +57,7 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 16,
         "ingredients": {ingredients["bacon"], ingredients["cheese"], ingredients["ranch"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "sassy_scotty.png"
     },
     "oos": {
         "tag": "flavor_dict",
@@ -66,7 +66,7 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["sweet_relish"], ingredients["eggs"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "olivias_old_south.png"
     },
     "jh": {
         "tag": "flavor_dict",
@@ -75,7 +75,7 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["jalapenos"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "jalapeno_holly.png"
     },
     "bb": {
         "tag": "flavor_dict",
@@ -84,7 +84,7 @@ flavor_data_list = {
         "small_quick_par": 3,
         "line_mix_par": 16,
         "ingredients": {ingredients["buffalo"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "buffalo_barclay.png"
     },
     "bbq": {
         "tag": "flavor_dict",
@@ -93,7 +93,7 @@ flavor_data_list = {
         "small_quick_par": 2,
         "line_mix_par": 8,
         "ingredients": {ingredients["barbecue"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "barbecue.png"
     },
     "dc": {
         "tag": "flavor_dict",
@@ -102,7 +102,7 @@ flavor_data_list = {
         "small_quick_par": 3,
         "line_mix_par": 12,
         "ingredients": {ingredients["onions"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "dixie_chick.png"
     },
     "kkl": {
         "tag": "flavor_dict",
@@ -111,7 +111,7 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["kickin"]},
-        "image_name": "cranberry_kelli.png"
+        "image_name": "kickin_kay_lynne.png"
     },
 }
 
