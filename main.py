@@ -1,13 +1,9 @@
 import tkinter as tk
-from operator import truediv
 from tkinter import font as tkfont
 from prep_sheet import prep_sheet
 import os
 
-def this_is_a_test():
-    test = True
-
-
+#Testingthisout
 all_resolution_data = {
     "android": {
         "base_font_size": 8,
