@@ -11,12 +11,12 @@ class TkManager:
         self.w = self.root.winfo_screenwidth()
         self.h = self.root.winfo_screenheight()
         self.root.geometry(f"{self.w}x{self.h}")
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight = 1)
+        self.root.rowconfigure(0, weight = 1)
         self.frame = tk.Frame(self.root)
-        self.frame.grid(row=0, column=0, sticky=tk.NSEW)
-        self.label = tk.Label(self.frame, text="Chicken Salad Production Software", font=("Arial", 12))
-        self.label.place(relx=0.5, rely=0.05, anchor="center")
+        self.frame.grid(row = 0, column = 0, sticky = tk.NSEW)
+        self.label = tk.Label(self.frame, text = "Chicken Salad Production Software", font = ("Arial", 12))
+        self.label.place(relx = 0.5, rely = 0.025, anchor = "center")
         self.buttons = []
 
 
@@ -25,6 +25,9 @@ class UiCompiler:
         self.base_font_size = 0
         self.button_width = 0
         self.button_height = 0
+        self.column = 0
+        self.btn_start_x = .0
+        self.btn_start_y = .05
         self.btn_step_y = .25
         self.btn_step_x = .4
 
@@ -37,11 +40,13 @@ class UiCompiler:
             self.base_font_size = 8
             self.button_width = 7
             self.button_height = 3
+            self.btn_start_x = .0
             print("Running on Android")
         elif os.name == "nt":
             self.base_font_size = 15
             self.button_width = 15
             self.button_height = 2
+            self.btn_start_x = .05
             print("Running on Windows")
         print(self.base_font_size)
         print(self.button_width)
@@ -49,15 +54,15 @@ class UiCompiler:
 
     def assign_dimensions(self, _tk_manager):
         for i, flavor in enumerate(prep_sheet.all_flavors):
-            column = (self.btn_step_y * i) // 1
-            btn_start_x = .05 + column * self.btn_step_x
-            btn_start_y = .05 + (self.btn_step_y * i) % 1
+            self.column = (self.btn_step_y * i) // 1
+            current_x = self.btn_start_x + self.column * self.btn_step_x
+            current_y = self.btn_start_y + (self.btn_step_y * i) % 1
 
-            btn = tk.Button(_tk_manager.frame, text=flavor.name, wraplength=int(_tk_manager.w * .1),
-                            width=self.button_width, height=self.button_height,
-                            font=("Arial", self.base_font_size),
-                            command=lambda f=flavor: on_flavor_click(f))
-            btn.place(relx=btn_start_x, rely=btn_start_y, anchor="nw")
+            btn = tk.Button(_tk_manager.frame, text = flavor.name, wraplength = int(_tk_manager.w * .1),
+                            width = self.button_width, height= self.button_height,
+                            font = ("Arial", self.base_font_size),
+                            command = lambda f = flavor: on_flavor_click(f))
+            btn.place(relx = current_x, rely = current_y, anchor = "nw")
             _tk_manager.buttons.append(btn)
 
 
@@ -68,8 +73,8 @@ def fit_text_to_button(self, btn, text, max_width_px):
     size = f.actual()['size']
     while f.measure(text) > max_width_px and size > 1:
         size -= 1
-        f.configure(size=size)
-    btn.config(font=f)
+        f.configure(size = size)
+    btn.config(font = f)
 
 
 def on_flavor_click(_flavor):
