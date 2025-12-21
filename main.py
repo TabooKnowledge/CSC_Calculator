@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import font as tkfont
 from PIL import Image, ImageTk, ImageDraw, ImageFont
-
+import os
 
 from prep_sheet import prep_sheet
 import os
@@ -176,9 +176,10 @@ class Button:
         self.tk_manager.buttons.append(self)
 
     def make_button_image(self):
+        script_dir = os.path.dirname(os.path.realpath(__file__))
         img = Image.open(self.image_name).convert("RGBA")
         draw = ImageDraw.Draw(img)
-        font_path = r"C:\Windows\Fonts\Arial.ttf"
+        font_path = os.path.join(script_dir, "fonts", "arial", "ARIAL.ttf")
         font = ImageFont.truetype(font_path, size=30)
         bbox = draw.textbbox((0, 0), self.text, font=font)
         text_w = bbox[2] - bbox[0]
