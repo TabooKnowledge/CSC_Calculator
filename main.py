@@ -29,8 +29,8 @@ all_resolution_data = {
         "btn_start_y": .025,
         "btn_step_y": .25,
         "btn_step_x": .4,
-        "btn_wraplength": .1,
-        "btn_scale_ratio": 0.1
+        "btn_wraplength": .0,
+        "btn_scale_ratio": 0.125
     }
 }
 
@@ -149,6 +149,7 @@ class Button:
         self.tk_manager = _tk_manager
         self.ui_manager = _ui_manager
         self.resolution_data = _tk_manager.resolution_data
+        self.font_path = ""
         self.index = 0
         self.x = 0
         self.y = 0
@@ -164,7 +165,12 @@ class Button:
         self.command_func  = None
         self.tk_widget = None
 
+    def build_font_path(self):
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        self.font_path = os.path.join(script_dir, "fonts", "arial", "ARIAL.ttf")
+
     def initialize(self, i):
+        self.build_font_path()
         self.text = self.data.name
         self.image_name = self.data.image_name
         #self.command_func = self.data["command_func"]
@@ -176,17 +182,18 @@ class Button:
         self.tk_manager.buttons.append(self)
 
     def make_button_image(self):
-        script_dir = os.path.dirname(os.path.realpath(__file__))
-        img = Image.open(self.image_name).convert("RGBA")
+        scrn_w = self.tk_manager.w
+        img_w = int(scrn_w * self.resolution_data["btn_scale_ratio"])
+        img_h = int(scrn_w * self.resolution_data["btn_scale_ratio"]//1.25)
+        img = Image.open(self.image_name).resize((img_w, img_h))
         draw = ImageDraw.Draw(img)
-        font_path = os.path.join(script_dir, "fonts", "arial", "ARIAL.ttf")
-        font = ImageFont.truetype(font_path, size=30)
+        font = ImageFont.truetype(self.font_path, size=20)
         bbox = draw.textbbox((0, 0), self.text, font=font)
         text_w = bbox[2] - bbox[0]
         text_h = bbox[3] - bbox[1]
         img_w, img_h = img.size
         x = (img_w - text_w) // 2
-        y = (img_h - text_h) - 5
+        y = 0
         draw.text((x, y), self.text, font=font, fill="white")
         self.image = ImageTk.PhotoImage(img)
 
@@ -200,14 +207,10 @@ class Button:
     def create_widget(self):
         self.tk_widget = tk.Button(
         self.canvas,
-            text = self.text,
             width = self.image.width(),
             height = self.image.height(),
-            font = self.font,
             command = self.on_click,
             image = self.image,
-            compound = "center",
-            fg = "black",
             wraplength = self.image.width(),
     )
 
