@@ -16,9 +16,16 @@ frame.grid(row=0, column=0, sticky=tk.NSEW)
 label = tk.Label(frame, text="Chicken Salad Production Software", font=("Arial", 12))
 label.place(relx=0.5, rely=0.05, anchor="center")
 buttons = []
-base_font_size = max(8, int(h * .02))
-button_width = max(5, int(w * .01))
-button_height = max (2, int(h * .0025))
+if h > 1080:
+    base_font_size = 8
+    button_width = 7
+    button_height = 3
+else:
+    base_font_size = 15
+    button_width = 15
+    button_height = 2
+print(h)
+print(w)
 print(base_font_size)
 print(button_width)
 print(button_height)
