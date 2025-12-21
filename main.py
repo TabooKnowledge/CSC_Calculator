@@ -120,10 +120,14 @@ class UiCompiler:
     def fit_text_to_button(self, btn, text, max_width_px):
         f = tkfont.Font(font=btn['font'])
         size = f.actual()['size']
-        while f.measure(text) > max_width_px and size > 1:
+        btn.update_idletasks()
+        button_px_width = btn.winfo_width()
+        if button_px_width == 1:
+            button_px_width = max_width_px
+        while f.measure(text) > button_px_width and size > 1:
             size -= 1
-            f.configure(size = size)
-        btn.config(font = f)
+            f.configure(size=size)
+        btn.config(font=f)
 
 
 def on_flavor_click(_flavor):
