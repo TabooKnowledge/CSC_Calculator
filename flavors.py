@@ -39,7 +39,7 @@ flavor_data_list = {
         "ingredients": {ingredients["classic"]},
     },
     "ss": {
-        "name": "Sass Scotty",
+        "name": "Sassy Scotty",
         "large_quick_par": 4,
         "small_quick_par": 4,
         "line_mix_par": 16,

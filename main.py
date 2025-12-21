@@ -13,7 +13,8 @@ all_resolution_data = {
         "btn_start_x": .02,
         "btn_start_y": .05,
         "btn_step_y": .25,
-        "btn_step_x": .35
+        "btn_step_x": .35,
+        "btn_wraplength": .15
     },
     "windows": {
         "base_font_size": 15,
@@ -22,7 +23,8 @@ all_resolution_data = {
         "btn_start_x": .04,
         "btn_start_y": .05,
         "btn_step_y": .25,
-        "btn_step_x": .4
+        "btn_step_x": .4,
+        "btn_wraplength": .15
     }
 }
 
@@ -74,6 +76,7 @@ class UiCompiler:
         self.btn_start_y = 0
         self.btn_step_y = 0
         self.btn_step_x = 0
+        self.btn_wraplength = 0
         self.all_resolution_data = all_res_data
         self.resolution_data = None
 
@@ -99,6 +102,7 @@ class UiCompiler:
         self.btn_start_y = self.resolution_data["btn_start_y"]
         self.btn_step_y = self.resolution_data["btn_step_y"]
         self.btn_step_x = self.resolution_data["btn_step_x"]
+        self.btn_wraplength = self.resolution_data["btn_wraplength"]
 
 
     def assign_dimensions(self):
@@ -107,9 +111,14 @@ class UiCompiler:
             current_x = self.btn_start_x + self.column * self.btn_step_x
             current_y = self.btn_start_y + (self.btn_step_y * i) % 1
 
-            btn = tk.Button(self.tk_manager.root, text = flavor.name, wraplength = int(self.tk_manager.w * .1),
-                            width = self.btn_width, height= self.btn_height,
+            btn = tk.Button(self.tk_manager.root,
+                            text = flavor.name,
+                            wraplength = int(self.tk_manager.w * self.btn_wraplength),
+                            width = self.btn_width,
+                            height= self.btn_height,
                             font = ("Arial", self.base_font_size),
+                            anchor = "center",
+                            padx = 20,
                             command = lambda f = flavor: on_flavor_click(f))
             self.tk_manager.canvas.create_window(int(current_x * self.tk_manager.w),
                                  int(current_y * self.tk_manager.h),
