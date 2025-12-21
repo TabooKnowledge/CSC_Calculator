@@ -49,7 +49,6 @@ class TkManager:
         self.create_canvas()
         self.create_bg_img()
         self.draw_img_to_canvas()
-        self.create_window()
 
     def create_canvas(self):
         self.canvas = tk.Canvas(self.root)
@@ -62,10 +61,6 @@ class TkManager:
     def draw_img_to_canvas(self):
         self.canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
         self.canvas.photo = self.bg_img
-
-    def create_window(self):
-        btn = tk.Button(self.root, text="I EXIST")
-        self.canvas.create_window(400, 300, window=btn, anchor="center")
 
 
 class UiCompiler:
@@ -119,18 +114,16 @@ class UiCompiler:
             self.tk_manager.canvas.create_window(int(current_x * self.tk_manager.w),
                                  int(current_y * self.tk_manager.h),
                                  window=btn, anchor="nw")
+            self.fit_text_to_button(btn, flavor.name, 300)
             self.tk_manager.buttons.append(btn)
 
-
-
-
-def fit_text_to_button(btn, text, max_width_px):
-    f = tkfont.Font(font=btn['font'])
-    size = f.actual()['size']
-    while f.measure(text) > max_width_px and size > 1:
-        size -= 1
-        f.configure(size = size)
-    btn.config(font = f)
+    def fit_text_to_button(self, btn, text, max_width_px):
+        f = tkfont.Font(font=btn['font'])
+        size = f.actual()['size']
+        while f.measure(text) > max_width_px and size > 1:
+            size -= 1
+            f.configure(size = size)
+        btn.config(font = f)
 
 
 def on_flavor_click(_flavor):
