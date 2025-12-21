@@ -1,28 +1,29 @@
 ingredient_data_list = [
-    {"Name": "Cranberries",   "Weight": .28},
-    {"Name": "Almonds",       "Weight": .40},
-    {"Name": "Pecans",        "Weight": .27},
-    {"Name": "Grapes",        "Weight": .35},
-    {"Name": "Apples",        "Weight": .30},
-    {"Name": "Lauryn's Mix",  "Weight": .20},
-    {"Name": "Pineapples",    "Weight": .50},
-    {"Name": "Bacon",         "Weight": .28},
-    {"Name": "Ranch",         "Weight": .55},
-    {"Name": "Cheese",        "Weight": .23},
-    {"Name": "Sweet Relish",  "Weight": .65},
-    {"Name": "Eggs",          "Weight": .33},
-    {"Name": "Jalapenos",     "Weight": .50},
-    {"Name": "Buffalo",       "Weight": .50},
-    {"Name": "Barbecue",      "Weight": .50},
-    {"Name": "Onions",        "Weight": .40},
-    {"Name": "Classic",       "Weight": .00},
-    {"Name": "Kickin'",       "Weight": .00},
+    {"name": "cranberries",   "weight": .28},
+    {"name": "almonds",       "weight": .40},
+    {"name": "pecans",        "weight": .27},
+    {"name": "grapes",        "weight": .35},
+    {"name": "apples",        "weight": .30},
+    {"name": "lauryns_mix",  "weight": .20},
+    {"name": "pineapples",    "weight": .50},
+    {"name": "bacon",         "weight": .28},
+    {"name": "ranch",         "weight": .55},
+    {"name": "cheese",        "weight": .23},
+    {"name": "sweet_relish",  "weight": .65},
+    {"name": "eggs",          "weight": .33},
+    {"name": "jalapenos",     "weight": .50},
+    {"name": "buffalo",       "weight": .50},
+    {"name": "barbecue",      "weight": .50},
+    {"name": "onions",        "weight": .40},
+    {"name": "classic",       "weight": .00},
+    {"name": "kickin",       "weight": .00},
 ]
+
 
 class Ingredient:
     def __init__(self, ingredient_data):
-        self.name = ingredient_data["Name"]
-        self.weight = ingredient_data["Weight"]
+        self.name = ingredient_data["name"]
+        self.weight = ingredient_data["weight"]
         self.totaled_weight = 0
 
 

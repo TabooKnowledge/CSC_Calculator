@@ -3,100 +3,100 @@ from ingredients import ingredients_by_name as ingredients
 
 
 flavor_data_list = {
-    "CK": {
-        "Name": "Cranberry Kelly",
-        "Large Quick Par": 6,
-        "Small Quick Par": 6,
-        "Line Mix Par": 16,
-        "Ingredients": {ingredients["Cranberries"], ingredients["Almonds"]}
+    "ck": {
+        "name": "Cranberry Kelly",
+        "large_quick_par": 6,
+        "small_quick_par": 6,
+        "line_mix_par": 16,
+        "ingredients": {ingredients["cranberries"], ingredients["almonds"]},
     },
-    "FN": {
-        "Name": "Fancy Nancy",
-        "Large Quick Par": 13,
-        "Small Quick Par": 9,
-        "Line Mix Par": 28,
-        "Ingredients": {ingredients["Apples"], ingredients["Pecans"], ingredients["Grapes"]}
+    "fn": {
+        "name": "Fancy Nancy",
+        "large_quick_par": 13,
+        "small_quick_par": 9,
+        "line_mix_par": 28,
+        "ingredients": {ingredients["apples"], ingredients["pecans"], ingredients["grapes"]},
     },
-    "LLB": {
-        "Name": "Lauryn's Lemon Basil",
-        "Large Quick Par": 3,
-        "Small Quick Par": 3,
-        "Line Mix Par": 12,
-        "Ingredients": {ingredients["Lauryn's Mix"]},
+    "llb": {
+        "name": "Lauryn's Lemon Basil",
+        "large_quick_par": 3,
+        "small_quick_par": 3,
+        "line_mix_par": 12,
+        "ingredients": {ingredients["lauryns_mix"]},
     },
-    "FF": {
-        "Name": "Fruity Fran",
-        "Large Quick Par": 4,
-        "Small Quick Par": 4,
-        "Line Mix Par": 12,
-        "Ingredients": {ingredients["Pineapples"], ingredients["Pecans"], ingredients["Grapes"]},
+    "ff": {
+        "name": "Fruity Fran",
+        "large_quick_par": 4,
+        "small_quick_par": 4,
+        "line_mix_par": 12,
+        "ingredients": {ingredients["pineapples"], ingredients["pecans"], ingredients["grapes"]},
     },
-    "CC": {
-        "Name": "Classic Carol",
-        "Large Quick Par": 13,
-        "Small Quick Par": 9,
-        "Line Mix Par": 24,
-        "Ingredients": {ingredients["Classic"]},
+    "cc": {
+        "name": "Classic Carol",
+        "large_quick_par": 13,
+        "small_quick_par": 9,
+        "line_mix_par": 24,
+        "ingredients": {ingredients["classic"]},
     },
-    "SS": {
-        "Name": "Sass Scotty",
-        "Large Quick Par": 4,
-        "Small Quick Par": 4,
-        "Line Mix Par": 16,
-        "Ingredients": {ingredients["Bacon"], ingredients["Cheese"], ingredients["Ranch"]},
+    "ss": {
+        "name": "Sass Scotty",
+        "large_quick_par": 4,
+        "small_quick_par": 4,
+        "line_mix_par": 16,
+        "ingredients": {ingredients["bacon"], ingredients["cheese"], ingredients["ranch"]},
     },
-    "OOS": {
-        "Name": "Olivia's Old South",
-        "Large Quick Par": 4,
-        "Small Quick Par": 4,
-        "Line Mix Par": 12,
-        "Ingredients": {ingredients["Sweet Relish"], ingredients["Eggs"]},
+    "oos": {
+        "name": "Olivia's Old South",
+        "large_quick_par": 4,
+        "small_quick_par": 4,
+        "line_mix_par": 12,
+        "ingredients": {ingredients["sweet_relish"], ingredients["eggs"]},
     },
-    "JH": {
-        "Name": "Jalapeno Holly",
-        "Large Quick Par": 4,
-        "Small Quick Par": 4,
-        "Line Mix Par": 12,
-        "Ingredients": {ingredients["Jalapenos"]},
-
+    "jh": {
+        "name": "Jalapeno Holly",
+        "large_quick_par": 4,
+        "small_quick_par": 4,
+        "line_mix_par": 12,
+        "ingredients": {ingredients["jalapenos"]},
     },
-    "BB": {
-        "Name": "Buffalo Barclay",
-        "Large Quick Par": 3,
-        "Small Quick Par": 3,
-        "Line Mix Par": 16,
-        "Ingredients": {ingredients["Buffalo"]},
+    "bb": {
+        "name": "Buffalo Barclay",
+        "large_quick_par": 3,
+        "small_quick_par": 3,
+        "line_mix_par": 16,
+        "ingredients": {ingredients["buffalo"]},
     },
-    "BBQ": {
-        "Name": "Barbecue",
-        "Large Quick Par": 2,
-        "Small Quick Par": 2,
-        "Line Mix Par": 8,
-        "Ingredients": {ingredients["Barbecue"]},
+    "bbq": {
+        "name": "Barbecue",
+        "large_quick_par": 2,
+        "small_quick_par": 2,
+        "line_mix_par": 8,
+        "ingredients": {ingredients["barbecue"]},
     },
-    "DC": {
-        "Name": "Dixie Chick",
-        "Large Quick Par": 3,
-        "Small Quick Par": 3,
-        "Line Mix Par": 12,
-        "Ingredients": {ingredients["Onions"]},
+    "dc": {
+        "name": "Dixie Chick",
+        "large_quick_par": 3,
+        "small_quick_par": 3,
+        "line_mix_par": 12,
+        "ingredients": {ingredients["onions"]},
     },
-    "KKL": {
-        "Name": "Kickin' Kay Lynne",
-        "Large Quick Par": 4,
-        "Small Quick Par": 4,
-        "Line Mix Par": 12,
-        "Ingredients": {ingredients["Kickin'"]},
-    }
+    "kkl": {
+        "name": "Kickin' Kay Lynne",
+        "large_quick_par": 4,
+        "small_quick_par": 4,
+        "line_mix_par": 12,
+        "ingredients": {ingredients["kickin"]},
+    },
 }
+
 
 
 class Flavor:
     def __init__(self, flavor_data):
-        self.name = flavor_data["Name"]
-        self.large_quick_par = flavor_data["Large Quick Par"]
-        self.small_quick_par = flavor_data["Small Quick Par"]
-        self.line_mix_par = flavor_data["Line Mix Par"]
+        self.name = flavor_data["name"]
+        self.large_quick_par = flavor_data["large_quick_par"]
+        self.small_quick_par = flavor_data["small_quick_par"]
+        self.line_mix_par = flavor_data["line_mix_par"]
         self.totaled_par_weight = 0
         self.calculate_par_weight()
         self.large_quick_on_hand = 0
@@ -106,7 +106,7 @@ class Flavor:
         self.small_quick_needed = 0
         self.line_mix_needed = 0
         self.total_mix_weight = 0
-        self.ingredients = flavor_data["Ingredients"]
+        self.ingredients = flavor_data["ingredients"]
         self.totaled_ingredient_weight = 0
 
 

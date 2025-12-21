@@ -4,6 +4,28 @@ from prep_sheet import prep_sheet
 import os
 
 
+all_resolution_data = {
+    "android": {
+        "base_font_size": 8,
+        "btn_width": 7,
+        "btn_height": 3,
+        "btn_start_x": .02,
+        "btn_start_y": .05,
+        "btn_step_y": .25,
+        "btn_step_x": .35
+    },
+    "windows": {
+        "base_font_size": 15,
+        "btn_width": 15,
+        "btn_height": 2,
+        "btn_start_x": .04,
+        "btn_start_y": .05,
+        "btn_step_y": .25,
+        "btn_step_x": .4
+    }
+}
+
+
 class TkManager:
     def __init__(self):
         self.root = tk.Tk()
@@ -20,37 +42,40 @@ class TkManager:
         self.buttons = []
 
 
+
 class UiCompiler:
-    def __init__(self):
+    def __init__(self, all_res_data):
         self.base_font_size = 0
-        self.button_width = 0
-        self.button_height = 0
+        self.btn_width = 0
+        self.btn_height = 0
         self.column = 0
-        self.btn_start_x = .0
-        self.btn_start_y = .05
-        self.btn_step_y = .25
-        self.btn_step_x = .4
+        self.btn_start_x = 0
+        self.btn_start_y = 0
+        self.btn_step_y = 0
+        self.btn_step_x = 0
+        self.all_resolution_data = all_res_data
+        self.resolution_data = None
 
     def initialize_ui(self, _tk_manager):
-        self.assign_ui_scale()
+        self.set_resolution_data()
+        self.set_ui_properties()
         self.assign_dimensions(_tk_manager)
 
-    def assign_ui_scale(self):
+    def set_resolution_data(self):
         if "ANDROID_ROOT" in os.environ:
-            self.base_font_size = 8
-            self.button_width = 7
-            self.button_height = 3
-            self.btn_start_x = .0
-            print("Running on Android")
+            self.resolution_data = self.all_resolution_data["android"]
         elif os.name == "nt":
-            self.base_font_size = 15
-            self.button_width = 15
-            self.button_height = 2
-            self.btn_start_x = .05
-            print("Running on Windows")
-        print(self.base_font_size)
-        print(self.button_width)
-        print(self.button_height)
+            self.resolution_data = self.all_resolution_data["windows"]
+
+    def set_ui_properties(self):
+        self.base_font_size = self.resolution_data["base_font_size"]
+        self.btn_width = self.resolution_data["btn_width"]
+        self.btn_height = self.resolution_data["btn_height"]
+        self.btn_start_x = self.resolution_data["btn_start_x"]
+        self.btn_start_y = self.resolution_data["btn_start_y"]
+        self.btn_step_y = self.resolution_data["btn_step_y"]
+        self.btn_step_x = self.resolution_data["btn_step_x"]
+
 
     def assign_dimensions(self, _tk_manager):
         for i, flavor in enumerate(prep_sheet.all_flavors):
@@ -59,7 +84,7 @@ class UiCompiler:
             current_y = self.btn_start_y + (self.btn_step_y * i) % 1
 
             btn = tk.Button(_tk_manager.frame, text = flavor.name, wraplength = int(_tk_manager.w * .1),
-                            width = self.button_width, height= self.button_height,
+                            width = self.btn_width, height= self.btn_height,
                             font = ("Arial", self.base_font_size),
                             command = lambda f = flavor: on_flavor_click(f))
             btn.place(relx = current_x, rely = current_y, anchor = "nw")
@@ -81,7 +106,7 @@ def on_flavor_click(_flavor):
     print(f"Clicked {_flavor.name}")
 
 tk_manager = TkManager()
-ui_compiler = UiCompiler()
+ui_compiler = UiCompiler(all_resolution_data)
 ui_compiler.initialize_ui(tk_manager)
 
 tk_manager.root.mainloop()
