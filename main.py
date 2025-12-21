@@ -8,23 +8,27 @@ import os
 all_resolution_data = {
     "android": {
         "base_font_size": 8,
+        "font": "Arial",
         "btn_width": 7,
         "btn_height": 3,
         "btn_start_x": .02,
         "btn_start_y": .05,
         "btn_step_y": .25,
         "btn_step_x": .35,
-        "btn_wraplength": .15
+        "btn_wraplength": .2,
+        "btn_scale_ratio": 0.1
     },
     "windows": {
         "base_font_size": 15,
+        "font": "Arial",
         "btn_width": 15,
         "btn_height": 2,
         "btn_start_x": .04,
         "btn_start_y": .05,
         "btn_step_y": .25,
         "btn_step_x": .4,
-        "btn_wraplength": .15
+        "btn_wraplength": .1,
+        "btn_scale_ratio": 0.1
     }
 }
 
@@ -33,6 +37,7 @@ class TkManager:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Chicken Salad Production Software")
+        self.resolution_data = None
         self.w = self.root.winfo_screenwidth()
         self.h = self.root.winfo_screenheight()
         self.root.geometry(f"{self.w}x{self.h}")
@@ -69,6 +74,7 @@ class UiCompiler:
     def __init__(self, all_res_data, _tk_manager):
         self.tk_manager = _tk_manager
         self.base_font_size = 0
+        self.font = ""
         self.btn_width = 0
         self.btn_height = 0
         self.column = 0
@@ -83,19 +89,22 @@ class UiCompiler:
     def initialize_ui(self):
         self.set_resolution_data()
         self.set_ui_properties()
-        self.assign_dimensions()
+        #self.assign_dimensions()
 
     def set_resolution_data(self):
         if "ANDROID_ROOT" in os.environ:
             self.resolution_data = self.all_resolution_data["android"]
+            self.tk_manager.resolution_data = self.resolution_data
         elif os.name == "nt":
             self.resolution_data = self.all_resolution_data["windows"]
+            self.tk_manager.resolution_data = self.resolution_data
         else:
             print("Unsupported OS")
             exit(1)
 
     def set_ui_properties(self):
         self.base_font_size = self.resolution_data["base_font_size"]
+        self.font = tkfont.Font(font=self.font)
         self.btn_width = self.resolution_data["btn_width"]
         self.btn_height = self.resolution_data["btn_height"]
         self.btn_start_x = self.resolution_data["btn_start_x"]
@@ -118,12 +127,11 @@ class UiCompiler:
                             height= self.btn_height,
                             font = ("Arial", self.base_font_size),
                             anchor = "center",
-                            padx = 20,
                             command = lambda f = flavor: on_flavor_click(f))
             self.tk_manager.canvas.create_window(int(current_x * self.tk_manager.w),
                                  int(current_y * self.tk_manager.h),
                                  window=btn, anchor="nw")
-            self.fit_text_to_button(btn, flavor.name, 300)
+           # self.fit_text_to_button(btn, flavor.name, 300)
             self.tk_manager.buttons.append(btn)
 
     def fit_text_to_button(self, btn, text, max_width_px):
@@ -133,6 +141,68 @@ class UiCompiler:
             size -= 1
             f.configure(size = size)
         btn.config(font = f)
+
+
+class Button:
+    def __init__(self, _tk_manager, canvas, data, font):
+        self.tk_manager = _tk_manager
+        self.resolution_data = _tk_manager.resolution_data
+        self.x = 0
+        self.y = 0
+        self.w = self.resolution_data["btn_width"]
+        self.h = self.resolution_data["btn_height"]
+        self.text = ""
+        self.font = font
+        self.canvas = canvas
+        self.data = data
+        self.tag = data.tag
+        self.image_name = ""
+        self.image = None
+        self.command_func  = None
+        self.tk_widget = None
+
+    def initialize(self):
+        self.x = 50
+        self.y = 50
+        #self.x = self.data["x"]
+        #self.y = self.data["y"]
+        self.text = self.data.name
+        self.image_name = self.data.image_name
+        #self.command_func = self.data["command_func"]
+        self.create_image()
+        self.create_widget()
+        self.create_window()
+
+    def create_image(self):
+        scrn_w = self.tk_manager.w
+        img_w = int(scrn_w * self.resolution_data["btn_scale_ratio"])
+        img = Image.open(self.image_name).resize((img_w, img_w))
+        #img.resize(img.size)
+        self.image = ImageTk.PhotoImage(img)
+
+    def create_widget(self):
+        self.tk_widget = tk.Button(
+        self.canvas,
+        text = self.text,
+        #width = self.w,
+        #height = self.h,
+        font = self.font,
+        command = self.on_click,
+        image = self.image
+
+)
+    def create_window(self):
+        self.canvas.create_window(
+            self.x,
+            self.y,
+            window=self.tk_widget,
+            anchor="nw"
+        )
+
+    def on_click(self):
+        if self.command_func  is not None:
+            self.command_func ()
+
 
 
 def on_flavor_click(_flavor):
@@ -145,4 +215,6 @@ tk_manager = TkManager()
 tk_manager.initialize()
 ui_compiler = UiCompiler(all_resolution_data, tk_manager)
 ui_compiler.initialize_ui()
+btn = Button(tk_manager, tk_manager.canvas,prep_sheet.all_flavors[0],"Arial")
+btn.initialize()
 tk_manager.root.mainloop()

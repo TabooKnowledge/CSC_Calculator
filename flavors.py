@@ -1,91 +1,117 @@
 import math
 from ingredients import ingredients_by_name as ingredients
+from PIL import Image, ImageTk
 
 
 flavor_data_list = {
     "ck": {
-        "name": "Cranberry Kelly",
+        "tag": "flavor_dict",
+        "name": "Cranberry Kelli",
         "large_quick_par": 6,
         "small_quick_par": 6,
         "line_mix_par": 16,
         "ingredients": {ingredients["cranberries"], ingredients["almonds"]},
+        "image_name": "cranberry_kelli.png",
     },
     "fn": {
+        "tag": "flavor_dict",
         "name": "Fancy Nancy",
         "large_quick_par": 13,
         "small_quick_par": 9,
         "line_mix_par": 28,
         "ingredients": {ingredients["apples"], ingredients["pecans"], ingredients["grapes"]},
+        "image_name": "cranberry_kelli.png",
+
     },
     "llb": {
+        "tag": "flavor_dict",
         "name": "Lauryn's Lemon Basil",
         "large_quick_par": 3,
         "small_quick_par": 3,
         "line_mix_par": 12,
         "ingredients": {ingredients["lauryns_mix"]},
+        "image_name": "cranberry_kelli.png"
     },
     "ff": {
+        "tag": "flavor_dict",
         "name": "Fruity Fran",
         "large_quick_par": 4,
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["pineapples"], ingredients["pecans"], ingredients["grapes"]},
+        "image_name": "cranberry_kelli.png"
     },
     "cc": {
+        "tag": "flavor_dict",
         "name": "Classic Carol",
         "large_quick_par": 13,
         "small_quick_par": 9,
         "line_mix_par": 24,
         "ingredients": {ingredients["classic"]},
+        "image_name": "cranberry_kelli.png"
     },
     "ss": {
+        "tag": "flavor_dict",
         "name": "Sassy Scotty",
         "large_quick_par": 4,
         "small_quick_par": 4,
         "line_mix_par": 16,
         "ingredients": {ingredients["bacon"], ingredients["cheese"], ingredients["ranch"]},
+        "image_name": "cranberry_kelli.png"
     },
     "oos": {
+        "tag": "flavor_dict",
         "name": "Olivia's Old South",
         "large_quick_par": 4,
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["sweet_relish"], ingredients["eggs"]},
+        "image_name": "cranberry_kelli.png"
     },
     "jh": {
+        "tag": "flavor_dict",
         "name": "Jalapeno Holly",
         "large_quick_par": 4,
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["jalapenos"]},
+        "image_name": "cranberry_kelli.png"
     },
     "bb": {
+        "tag": "flavor_dict",
         "name": "Buffalo Barclay",
         "large_quick_par": 3,
         "small_quick_par": 3,
         "line_mix_par": 16,
         "ingredients": {ingredients["buffalo"]},
+        "image_name": "cranberry_kelli.png"
     },
     "bbq": {
+        "tag": "flavor_dict",
         "name": "Barbecue",
         "large_quick_par": 2,
         "small_quick_par": 2,
         "line_mix_par": 8,
         "ingredients": {ingredients["barbecue"]},
+        "image_name": "cranberry_kelli.png"
     },
     "dc": {
+        "tag": "flavor_dict",
         "name": "Dixie Chick",
         "large_quick_par": 3,
         "small_quick_par": 3,
         "line_mix_par": 12,
         "ingredients": {ingredients["onions"]},
+        "image_name": "cranberry_kelli.png"
     },
     "kkl": {
+        "tag": "flavor_dict",
         "name": "Kickin' Kay Lynne",
         "large_quick_par": 4,
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["kickin"]},
+        "image_name": "cranberry_kelli.png"
     },
 }
 
@@ -93,6 +119,7 @@ flavor_data_list = {
 
 class Flavor:
     def __init__(self, flavor_data):
+        self.tag = flavor_data["tag"]
         self.name = flavor_data["name"]
         self.large_quick_par = flavor_data["large_quick_par"]
         self.small_quick_par = flavor_data["small_quick_par"]
@@ -108,6 +135,7 @@ class Flavor:
         self.total_mix_weight = 0
         self.ingredients = flavor_data["ingredients"]
         self.totaled_ingredient_weight = 0
+        self.image_name = flavor_data["image_name"]
 
 
     def calculate_par_weight(self):
