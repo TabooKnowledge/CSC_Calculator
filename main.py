@@ -34,17 +34,43 @@ class TkManager:
         self.w = self.root.winfo_screenwidth()
         self.h = self.root.winfo_screenheight()
         self.root.geometry(f"{self.w}x{self.h}")
-        self.root.columnconfigure(0, weight = 1)
-        self.root.rowconfigure(0, weight = 1)
-        self.frame = tk.Frame(self.root)
-        self.frame.grid(row = 0, column = 0, sticky = tk.NSEW)
-        self.label = tk.Label(self.frame, text = "Chicken Salad Production Software", font = ("Arial", 12))
-        self.label.place(relx = 0.5, rely = 0.025, anchor = "center")
+        self.canvas = -1
+        self.bg_img = -1
+        self.label = -1
         self.buttons = []
+
+    def initialize(self):
+        self.initialize_canvas()
+        self.label = tk.Label(self.root, text="Chicken Salad Production Software", font=("Arial", 12))
+        self.label.place(relx=0.5, rely=0.025, anchor="center")
+        self.buttons = []
+
+    def initialize_canvas(self):
+        self.create_canvas()
+        self.create_bg_img()
+        self.draw_img_to_canvas()
+        self.create_window()
+
+    def create_canvas(self):
+        self.canvas = tk.Canvas(self.root)
+        self.canvas.pack(fill="both", expand=True)
+
+    def create_bg_img(self):
+        img = Image.open("stacey_sticker.jpg").resize((self.w, self.h))
+        self.bg_img = ImageTk.PhotoImage(img)
+
+    def draw_img_to_canvas(self):
+        self.canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
+        self.canvas.photo = self.bg_img
+
+    def create_window(self):
+        btn = tk.Button(self.root, text="I EXIST")
+        self.canvas.create_window(400, 300, window=btn, anchor="center")
 
 
 class UiCompiler:
-    def __init__(self, all_res_data):
+    def __init__(self, all_res_data, _tk_manager):
+        self.tk_manager = _tk_manager
         self.base_font_size = 0
         self.btn_width = 0
         self.btn_height = 0
@@ -56,10 +82,10 @@ class UiCompiler:
         self.all_resolution_data = all_res_data
         self.resolution_data = None
 
-    def initialize_ui(self, _tk_manager):
+    def initialize_ui(self):
         self.set_resolution_data()
         self.set_ui_properties()
-        self.assign_dimensions(_tk_manager)
+        self.assign_dimensions()
 
     def set_resolution_data(self):
         if "ANDROID_ROOT" in os.environ:
@@ -80,18 +106,20 @@ class UiCompiler:
         self.btn_step_x = self.resolution_data["btn_step_x"]
 
 
-    def assign_dimensions(self, _tk_manager):
+    def assign_dimensions(self):
         for i, flavor in enumerate(prep_sheet.all_flavors):
             self.column = (self.btn_step_y * i) // 1
             current_x = self.btn_start_x + self.column * self.btn_step_x
             current_y = self.btn_start_y + (self.btn_step_y * i) % 1
 
-            btn = tk.Button(_tk_manager.frame, text = flavor.name, wraplength = int(_tk_manager.w * .1),
+            btn = tk.Button(self.tk_manager.root, text = flavor.name, wraplength = int(self.tk_manager.w * .1),
                             width = self.btn_width, height= self.btn_height,
                             font = ("Arial", self.base_font_size),
                             command = lambda f = flavor: on_flavor_click(f))
-            btn.place(relx = current_x, rely = current_y, anchor = "nw")
-            _tk_manager.buttons.append(btn)
+            self.tk_manager.canvas.create_window(int(current_x * self.tk_manager.w),
+                                 int(current_y * self.tk_manager.h),
+                                 window=btn, anchor="nw")
+            self.tk_manager.buttons.append(btn)
 
 
 
@@ -108,8 +136,11 @@ def fit_text_to_button(btn, text, max_width_px):
 def on_flavor_click(_flavor):
     print(f"Clicked {_flavor.name}")
 
-tk_manager = TkManager()
-ui_compiler = UiCompiler(all_resolution_data)
-ui_compiler.initialize_ui(tk_manager)
 
+
+
+tk_manager = TkManager()
+tk_manager.initialize()
+ui_compiler = UiCompiler(all_resolution_data, tk_manager)
+ui_compiler.initialize_ui()
 tk_manager.root.mainloop()
