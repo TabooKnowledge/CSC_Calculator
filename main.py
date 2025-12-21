@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import font as tkfont
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
+
+
 from prep_sheet import prep_sheet
 import os
 
@@ -167,10 +169,25 @@ class Button:
         self.image_name = self.data.image_name
         #self.command_func = self.data["command_func"]
         self.assign_position(i)
-        self.create_image()
+        self.make_button_image()
+        #self.create_image()
         self.create_widget()
         self.create_window()
         self.tk_manager.buttons.append(self)
+
+    def make_button_image(self):
+        img = Image.open(self.image_name).convert("RGBA")
+        draw = ImageDraw.Draw(img)
+        font_path = r"C:\Windows\Fonts\Arial.ttf"
+        font = ImageFont.truetype(font_path, size=30)
+        bbox = draw.textbbox((0, 0), self.text, font=font)
+        text_w = bbox[2] - bbox[0]
+        text_h = bbox[3] - bbox[1]
+        img_w, img_h = img.size
+        x = (img_w - text_w) // 2
+        y = (img_h - text_h) - 5
+        draw.text((x, y), self.text, font=font, fill="white")
+        self.image = ImageTk.PhotoImage(img)
 
     def create_image(self):
         scrn_w = self.tk_manager.w
