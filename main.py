@@ -2,9 +2,7 @@ import tkinter as tk
 from tkinter import font as tkfont
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 import os
-
 from prep_sheet import prep_sheet
-import os
 
 
 all_resolution_data = {
@@ -63,7 +61,7 @@ class TkManager:
         self.canvas.pack(fill="both", expand=True)
 
     def create_bg_img(self):
-        img = Image.open("stacey_sticker.jpg").resize((self.w, self.h))
+        img = Image.open("images/stacey_sticker.jpg").resize((self.w, self.h))
         self.bg_img = ImageTk.PhotoImage(img)
 
     def draw_img_to_canvas(self):
@@ -160,23 +158,23 @@ class Button:
         self.canvas = canvas
         self.data = data
         self.tag = data.tag
-        self.image_name = ""
+        self.image_name = data.image_name
+        self.image_path = ""
         self.image = None
         self.command_func  = None
         self.tk_widget = None
 
-    def build_font_path(self):
+    def build_paths(self):
         script_dir = os.path.dirname(os.path.realpath(__file__))
         self.font_path = os.path.join(script_dir, "fonts", "arial", "ARIAL.ttf")
+        self.image_path = os.path.join(script_dir, "images", self.image_name)
 
     def initialize(self, i):
-        self.build_font_path()
+        self.build_paths()
         self.text = self.data.name
-        self.image_name = self.data.image_name
         #self.command_func = self.data["command_func"]
         self.assign_position(i)
         self.make_button_image()
-        #self.create_image()
         self.create_widget()
         self.create_window()
         self.tk_manager.buttons.append(self)
@@ -185,7 +183,7 @@ class Button:
         scrn_w = self.tk_manager.w
         img_w = int(scrn_w * self.resolution_data["btn_scale_ratio"])
         img_h = int(scrn_w * self.resolution_data["btn_scale_ratio"]//1.25)
-        img = Image.open(self.image_name).resize((img_w, img_h))
+        img = Image.open(self.image_path).resize((img_w, img_h))
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype(self.font_path, size=20)
         bbox = draw.textbbox((0, 0), self.text, font=font)

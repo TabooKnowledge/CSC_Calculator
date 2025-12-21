@@ -1,6 +1,5 @@
 import math
 from ingredients import ingredients_by_name as ingredients
-from PIL import Image, ImageTk
 
 
 flavor_data_list = {
