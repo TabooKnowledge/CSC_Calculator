@@ -113,37 +113,8 @@ class UiManager:
         self.btn_wraplength = self.resolution_data["btn_wraplength"]
 
 
-    def assign_dimensions(self):
-        for i, flavor in enumerate(prep_sheet.all_flavors):
-            self.column = (self.btn_step_y * i) // 1
-            current_x = self.btn_start_x + self.column * self.btn_step_x
-            current_y = self.btn_start_y + (self.btn_step_y * i) % 1
-
-            btn = tk.Button(self.tk_manager.root,
-                            text = flavor.name,
-                            wraplength = int(self.tk_manager.w * self.btn_wraplength),
-                            width = self.btn_width,
-                            height= self.btn_height,
-                            font = ("Arial", self.base_font_size),
-                            anchor = "center",
-                            command = lambda f = flavor: on_flavor_click(f))
-            self.tk_manager.canvas.create_window(int(current_x * self.tk_manager.w),
-                                 int(current_y * self.tk_manager.h),
-                                 window=btn, anchor="nw")
-           # self.fit_text_to_button(btn, flavor.name, 300)
-            self.tk_manager.buttons.append(btn)
-
-    def fit_text_to_button(self, btn, text, max_width_px):
-        f = tkfont.Font(font=btn['font'])
-        size = f.actual()['size']
-        while f.measure(text) > max_width_px and size > 1:
-            size -= 1
-            f.configure(size = size)
-        btn.config(font = f)
-
-
 class Button:
-    def __init__(self, _tk_manager, _ui_manager, canvas, data, font):
+    def __init__(self, _tk_manager, _ui_manager, canvas, data):
         self.tk_manager = _tk_manager
         self.ui_manager = _ui_manager
         self.resolution_data = _tk_manager.resolution_data
@@ -154,7 +125,7 @@ class Button:
         self.w = self.resolution_data["btn_width"]
         self.h = self.resolution_data["btn_height"]
         self.text = ""
-        self.font = font
+        #self.font = font
         self.canvas = canvas
         self.data = data
         self.tag = data.tag
@@ -199,7 +170,6 @@ class Button:
         scrn_w = self.tk_manager.w
         img_w = int(scrn_w * self.resolution_data["btn_scale_ratio"])
         img = Image.open(self.image_name).resize((img_w, img_w))
-        #img.resize(img.size)
         self.image = ImageTk.PhotoImage(img)
 
     def create_widget(self):
@@ -231,18 +201,11 @@ class Button:
             self.command_func ()
 
 
-
-def on_flavor_click(_flavor):
-    print(f"Clicked {_flavor.name}")
-
-
-
-
 tk_manager = TkManager()
 tk_manager.initialize()
 ui_manager = UiManager(all_resolution_data, tk_manager)
 ui_manager.initialize_ui()
 for i, flavor in enumerate(prep_sheet.all_flavors):
-    btn = Button(tk_manager, ui_manager, tk_manager.canvas,flavor,"Arial")
+    btn = Button(tk_manager, ui_manager, tk_manager.canvas,flavor)
     btn.initialize(i)
 tk_manager.root.mainloop()
