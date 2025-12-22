@@ -201,6 +201,20 @@ class Button:
             self.command_func ()
 
 
+
+def setup_ui():
+    tk_manager = TkManager()
+    tk_manager.initialize()
+    ui_manager = UiManager(all_resolution_data, tk_manager)
+    ui_manager.initialize_ui()
+    buttons = []
+    for i, flavor in enumerate(prep_sheet.all_flavors):
+        btn = Button(tk_manager, ui_manager, tk_manager.canvas, flavor)
+        btn.initialize(i)
+        buttons.append(btn)
+    return tk_manager, ui_manager, buttons
+
+""""
 tk_manager = TkManager()
 tk_manager.initialize()
 ui_manager = UiManager(all_resolution_data, tk_manager)
@@ -209,3 +223,4 @@ for i, flavor in enumerate(prep_sheet.all_flavors):
     btn = Button(tk_manager, ui_manager, tk_manager.canvas,flavor)
     btn.initialize(i)
 #tk_manager.root.mainloop()
+"""

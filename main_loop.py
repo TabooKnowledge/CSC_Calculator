@@ -1,6 +1,4 @@
-from main import tk_manager as tk
-from main import ui_manager as ui
-from main import Button
+from main import setup_ui
 
 
 class Coordinator:
@@ -8,19 +6,21 @@ class Coordinator:
         self.tk_manager = None
         self.ui_manager = None
         self.button_creator = None
+        self.buttons = None
         self.screen_width = 0
         self.screen_height = 0
 
-    def initialize(self):
-        self.tk_manager = tk
-        self.ui_manager = ui
-        self.button_creator = Button
+    def initialize(self, attributes):
+        self.tk_manager = attributes[0]
+        self.ui_manager = attributes[1]
+        self.buttons = attributes[2]
         self.screen_width = self.tk_manager.w
         self.screen_height = self.tk_manager.h
 
     def run(self):
         self.tk_manager.root.mainloop()
 
+attributes = setup_ui()
 coordinator = Coordinator()
-coordinator.initialize()
+coordinator.initialize(attributes)
 coordinator.run()
