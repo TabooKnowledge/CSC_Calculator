@@ -200,7 +200,7 @@ class Button:
         if self.command_func  is not None:
             self.command_func ()
 
-
+""""
 tk_manager = TkManager()
 tk_manager.initialize()
 ui_manager = UiManager(all_resolution_data, tk_manager)
@@ -208,4 +208,5 @@ ui_manager.initialize_ui()
 for i, flavor in enumerate(prep_sheet.all_flavors):
     btn = Button(tk_manager, ui_manager, tk_manager.canvas,flavor)
     btn.initialize(i)
-tk_manager.root.mainloop()
+#tk_manager.root.mainloop()
+"""
