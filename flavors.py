@@ -1,6 +1,12 @@
 import math
 from ingredients import ingredients_by_name as ingredients
+import pygame
+import os
 
+
+pygame.init()
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGE_DIR = os.path.join(SCRIPT_DIR, "images")
 
 flavor_data_list = {
     "ck": {
@@ -11,6 +17,7 @@ flavor_data_list = {
         "line_mix_par": 16,
         "ingredients": {ingredients["cranberries"], ingredients["almonds"]},
         "image_name": "cranberry_kelli.png",
+        "image": None
     },
     "fn": {
         "tag": "flavor_dict",
@@ -20,7 +27,7 @@ flavor_data_list = {
         "line_mix_par": 28,
         "ingredients": {ingredients["apples"], ingredients["pecans"], ingredients["grapes"]},
         "image_name": "fancy_nancy.png",
-
+        "image": None
     },
     "llb": {
         "tag": "flavor_dict",
@@ -29,7 +36,8 @@ flavor_data_list = {
         "small_quick_par": 3,
         "line_mix_par": 12,
         "ingredients": {ingredients["lauryns_mix"]},
-        "image_name": "lauryns_lemon_basil.png"
+        "image_name": "lauryns_lemon_basil.png",
+        "image": None
     },
     "ff": {
         "tag": "flavor_dict",
@@ -38,7 +46,8 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["pineapples"], ingredients["pecans"], ingredients["grapes"]},
-        "image_name": "fruity_fran.png"
+        "image_name": "fruity_fran.png",
+        "image": None
     },
     "cc": {
         "tag": "flavor_dict",
@@ -47,7 +56,8 @@ flavor_data_list = {
         "small_quick_par": 9,
         "line_mix_par": 24,
         "ingredients": {ingredients["classic"]},
-        "image_name": "classic_carol.png"
+        "image_name": "classic_carol.png",
+        "image": None
     },
     "ss": {
         "tag": "flavor_dict",
@@ -56,7 +66,8 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 16,
         "ingredients": {ingredients["bacon"], ingredients["cheese"], ingredients["ranch"]},
-        "image_name": "sassy_scotty.png"
+        "image_name": "sassy_scotty.png",
+        "image": None
     },
     "oos": {
         "tag": "flavor_dict",
@@ -65,7 +76,8 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["sweet_relish"], ingredients["eggs"]},
-        "image_name": "olivias_old_south.png"
+        "image_name": "olivias_old_south.png",
+        "image": None
     },
     "jh": {
         "tag": "flavor_dict",
@@ -74,7 +86,8 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["jalapenos"]},
-        "image_name": "jalapeno_holly.png"
+        "image_name": "jalapeno_holly.png",
+        "image": None
     },
     "bb": {
         "tag": "flavor_dict",
@@ -83,7 +96,8 @@ flavor_data_list = {
         "small_quick_par": 3,
         "line_mix_par": 16,
         "ingredients": {ingredients["buffalo"]},
-        "image_name": "buffalo_barclay.png"
+        "image_name": "buffalo_barclay.png",
+        "image": None
     },
     "bbq": {
         "tag": "flavor_dict",
@@ -92,7 +106,8 @@ flavor_data_list = {
         "small_quick_par": 2,
         "line_mix_par": 8,
         "ingredients": {ingredients["barbecue"]},
-        "image_name": "barbecue.png"
+        "image_name": "barbecue.png",
+        "image": None
     },
     "dc": {
         "tag": "flavor_dict",
@@ -101,7 +116,8 @@ flavor_data_list = {
         "small_quick_par": 3,
         "line_mix_par": 12,
         "ingredients": {ingredients["onions"]},
-        "image_name": "dixie_chick.png"
+        "image_name": "dixie_chick.png",
+        "image": None
     },
     "kkl": {
         "tag": "flavor_dict",
@@ -110,7 +126,8 @@ flavor_data_list = {
         "small_quick_par": 4,
         "line_mix_par": 12,
         "ingredients": {ingredients["kickin"]},
-        "image_name": "kickin_kay_lynne.png"
+        "image_name": "kickin_kay_lynne.png",
+        "image": None
     },
 }
 
@@ -120,6 +137,12 @@ class Flavor:
     def __init__(self, flavor_data):
         self.tag = flavor_data["tag"]
         self.name = flavor_data["name"]
+        self.x = 0
+        self.y = 0
+        self.width = 0
+        self.height = 0
+        self.text = flavor_data["name"]
+        self.image = None
         self.large_quick_par = flavor_data["large_quick_par"]
         self.small_quick_par = flavor_data["small_quick_par"]
         self.line_mix_par = flavor_data["line_mix_par"]
@@ -136,21 +159,17 @@ class Flavor:
         self.totaled_ingredient_weight = 0
         self.image_name = flavor_data["image_name"]
 
-
     def calculate_par_weight(self):
         self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
-
 
     def calculate_needed(self):
         self.calculate_prep_numbers()
         self.calculate_total_mix_weight()
 
-
     def calculate_prep_numbers(self):
         self.large_quick_needed = max(0, self.large_quick_par - self.large_quick_on_hand)
         self.small_quick_needed = max(0, self.small_quick_par - self.small_quick_on_hand)
         self.line_mix_needed = max(0, self.line_mix_par - self.line_mix_on_hand)
-
 
     def calculate_total_mix_weight(self):
         on_hand = self.large_quick_on_hand + self.small_quick_on_hand / 2 + self.line_mix_on_hand
@@ -163,11 +182,17 @@ class Flavor:
             ingredient.total_weight(self.total_mix_weight)
             self.totaled_ingredient_weight += ingredient.weight
 
+    def create_image(self):
+        self.image = pygame.image.load(os.path.join(IMAGE_DIR, self.image_name))
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
 
 def create_flavor_objects(_all_flavor_data):
     flavors = []
     for flavor_data in _all_flavor_data.values():
-        flavors.append(Flavor(flavor_data))
+        flavor = Flavor(flavor_data)
+        flavor.create_image()
+        flavors.append(flavor)
     return flavors
 
 
