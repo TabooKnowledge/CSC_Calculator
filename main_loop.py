@@ -1,5 +1,6 @@
-from main import TkManager, UiManager, Button, all_resolution_data
-from prep_sheet import prep_sheet
+from main import tk_manager as tk
+from main import ui_manager as ui
+from main import Button
 
 
 class Coordinator:
@@ -10,7 +11,7 @@ class Coordinator:
         self.screen_width = 0
         self.screen_height = 0
 
-    def initialize(self, tk, ui):
+    def initialize(self):
         self.tk_manager = tk
         self.ui_manager = ui
         self.button_creator = Button
@@ -21,12 +22,5 @@ class Coordinator:
         self.tk_manager.root.mainloop()
 
 coordinator = Coordinator()
-tk_manager = TkManager()
-ui_manager = UiManager(all_resolution_data, tk_manager)
-coordinator.initialize(tk_manager, ui_manager)
-tk_manager.initialize()
-ui_manager.initialize_ui()
-for i, flavor in enumerate(prep_sheet.all_flavors):
-    btn = Button(tk_manager, ui_manager, tk_manager.canvas,flavor)
-    btn.initialize(i)
+coordinator.initialize()
 coordinator.run()
