@@ -136,19 +136,6 @@ class Coordinator:
             self.pygame.clock.tick(self.pygame.fps)
 
 
-
-
-
-
-
-def create_flavor_objects(_all_flavor_data):
-    flavors = []
-    for flavor_data in _all_flavor_data.values():
-        flavor = Flavor(flavor_data)
-        flavors.append(flavor)
-    return flavors
-
-
 coordinator = Coordinator()
 coordinator.initialize()
 coordinator.main_loop()
