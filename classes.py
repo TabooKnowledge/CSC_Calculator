@@ -157,19 +157,27 @@ class DrawManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
         self.registry = []
+        self.canvas = None
 
-    def draw_registry(self, registry=None):
+    def draw_registry(self, scale=False, registry=None):
+        self.update_canvas()
         if registry is None:
             registry = self.registry
+        for sprite in registry:
+            if isinstance(sprite, list):
+                self.draw_registry( False, sprite)
+            elif self.validate(sprite):
+                if scale:
+                    w = sprite.w * self.coordinator.scale.image
+                    h = sprite.h * self.coordinator.scale.image
+                    sprite.scale(w, h)
+                else:
+                    sprite.draw(self.canvas)
 
-        canvas = self.coordinator.pygame.canvas
-        canvas.fill((0,0,0))
 
-        for item in registry:
-            if isinstance(item, list):
-                self.draw_registry(item)
-            elif self.validate(item):
-                item.draw(canvas)
+    def update_canvas(self):
+        self.canvas = self.coordinator.pygame.canvas
+        self.canvas.fill((0,0,0))
 
     def subscribe_sprite(self, sprite):
         self.registry.append(sprite)
@@ -178,6 +186,8 @@ class DrawManager:
         for r_sprite in self.registry:
             if r_sprite == sprite:
                 self.registry.remove(sprite)
+
+
 
     @staticmethod
     def validate(value):

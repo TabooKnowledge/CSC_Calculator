@@ -28,7 +28,7 @@ class Coordinator:
         #Images
         self.bg = SimpleNamespace(name="", surface=None)
         self.buttons = SimpleNamespace(
-            reach_in=SimpleNamespace(name="Reach-In",image_name="reach_in.png", surface=None),
+            reach_in=SimpleNamespace(name="Reach-In",image_name="reach_in_no_bg.png", surface=None),
             walk_in=SimpleNamespace(name="Walk-In", image_name="walk_in.png", surface=None),
             quick=SimpleNamespace(name="Quick", image_name="quick_no_bg.png", surface=None))
         #Resolution
@@ -79,18 +79,18 @@ class Coordinator:
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.canvas = pygame.Surface(self.screen.dimensions)
-        self.adjust_resolution()
         pygame.display.set_caption("Chicken Salad Production Software")
         self.pygame.clock = pygame.time.Clock()
         self.pygame.fps = 60
         self.running = True
         self.bg.name = "rainbow_bg.jpg"
         self.load_background()
+        self.adjust_resolution()
+        self.draw_manager.draw_registry(True)
 
     def adjust_resolution(self):
         self.retrieve_resolution_data()
         self.set_resolution_data()
-        self.scale_images()
 
     def retrieve_resolution_data(self):
         for name, profile in self.resolution_profiles.items():
@@ -106,12 +106,6 @@ class Coordinator:
         self.scale.y = self.screen.h / self.base_resolution.h
         self.scale.image = min(self.scale.x, self.scale.y)
         self.scale.font = self.active_profile["font_size"] * self.scale.image
-
-    def scale_images(self):
-        for flavor in self.flavors:
-            w = flavor.sprite.w * self.scale.image
-            h = flavor.sprite.h * self.scale.image
-            flavor.sprite.scale(w, h)
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))

@@ -1,6 +1,5 @@
 import os
 from types import SimpleNamespace
-import os
 
 CONSTANTS = SimpleNamespace()
 CONSTANTS.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
