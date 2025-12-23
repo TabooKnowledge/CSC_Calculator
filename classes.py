@@ -1,6 +1,8 @@
+from config import CONSTANTS
 import math
 from types import SimpleNamespace
 import os
+import pygame
 
 
 class Ingredient:
@@ -46,21 +48,18 @@ class Flavor:
         self.large_quick_par = self.data.flavor["large_quick_par"]
         self.small_quick_par = self.data.flavor["small_quick_par"]
         self.line_mix_par = self.data.flavor["line_mix_par"]
-        self.load_ingredients()
+        self.store_ingredients()
 
-    def load_ingredients(self):
+    def store_ingredients(self):
         for name in self.data.flavor["ingredients_names"]:
-            for ingr_name, weight in self.data.ingredients.items():
-                if ingr_name == name:
-                    ingredient = Ingredient(self.coordinator, {"name": ingr_name, "weight": weight})
+            for ingredient in self.coordinator.ingredients:
+                if ingredient.name == name:
                     self.ingredients.append(ingredient)
                     break
 
-    def load_sprite(self, sprite_class, pygame, image_directory):
-        self.sprite = sprite_class(self.coordinator)
-        self.sprite.surface = pygame.image.load(os.path.join(image_directory, self.img_name))
-        self.sprite.w = self.sprite.surface.get_width()
-        self.sprite.h = self.sprite.surface.get_height()
+    def load_sprite(self, sprite_class, image_directory):
+        self.sprite = sprite_class(self.coordinator, self.name, self.img_name)
+        self.sprite.initialize()
 
     def calculate_par_weight(self):
         self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
@@ -157,7 +156,7 @@ class Grid:
 class DrawManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
-        self.registry = {}
+        self.registry = []
 
     def draw_registry(self, registry=None):
         if registry is None:
@@ -166,11 +165,19 @@ class DrawManager:
         canvas = self.coordinator.pygame.canvas
         canvas.fill((0,0,0))
 
-        for value in registry.values():
-            if isinstance(value, dict):
-                self.draw_registry(value)
-            elif self.validate(value):
-                value.draw(canvas)
+        for item in registry:
+            if isinstance(item, list):
+                self.draw_registry(item)
+            elif self.validate(item):
+                item.draw(canvas)
+
+    def subscribe_sprite(self, sprite):
+        self.registry.append(sprite)
+
+    def unsubscribe_sprite(self, sprite):
+        for r_sprite in self.registry:
+            if r_sprite == sprite:
+                self.registry.remove(sprite)
 
     @staticmethod
     def validate(value):
@@ -178,18 +185,26 @@ class DrawManager:
 
 
 class Sprite:
-    def __init__(self, coordinator):
+    def __init__(self, coordinator, name, img_name):
         self.coordinator = coordinator
+        self.name = name
+        self.img_name = img_name
         self.x = 0
         self.y = 0
         self.w = 0
         self.h = 0
         self.surface = None
 
+    def initialize(self):
+        self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
+        self.w = self.surface.get_width()
+        self.h = self.surface.get_height()
+        self.coordinator.draw_manager.subscribe_sprite(self)
+
     def draw(self, canvas):
         canvas.blit(self.surface, (self.x, self.y))
 
-    def scale(self, pygame, w, h):
+    def scale(self, w, h):
         self.w = w
         self.h = h
         self.surface = pygame.transform.scale(self.surface, (w, h))

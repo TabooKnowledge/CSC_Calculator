@@ -1,4 +1,4 @@
-from config import ingredients_data, flavors_data, resolution_profiles
+from config import ingredients_data, flavors_data, resolution_profiles, CONSTANTS
 from classes import Ingredient, Flavor, PrepSheet, Grid, DrawManager, Sprite
 from types import SimpleNamespace
 import pygame
@@ -7,8 +7,6 @@ import os
 
 
 pygame.init()
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_DIR = os.path.join(SCRIPT_DIR, "images")
 
 
 class Coordinator:
@@ -28,14 +26,15 @@ class Coordinator:
         self.pygame = SimpleNamespace(canvas=None, screen=None, clock=None, fps=None, flip=pygame.display.flip, display_info=None)
         #Images
         self.bg = SimpleNamespace(name="", surface=None)
-        self.buttons_img = SimpleNamespace(
-            reach_in=SimpleNamespace(name="reach_in.png", surface=None),
-            walk_in=SimpleNamespace(name="walk_in.png", surface=None),
-            quick=SimpleNamespace(name="quick.png", surface=None))
+        self.buttons = SimpleNamespace(
+            reach_in=SimpleNamespace(name="Reach-In",image_name="reach_in.png", surface=None),
+            walk_in=SimpleNamespace(name="Walk-In", image_name="walk_in.png", surface=None),
+            quick=SimpleNamespace(name="Quick", image_name="quick_no_bg.png", surface=None))
         #Resolution
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
         #State
+        self.state = "main"
         self.running = True
 
     def initialize(self):
@@ -49,6 +48,7 @@ class Coordinator:
         self.draw_manager = DrawManager(self)
         self.initialize_ingredients()
         self.initialize_flavors()
+        self.load_button_sprites()
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():
@@ -59,8 +59,14 @@ class Coordinator:
         for flavor in flavors_data.values():
             flavor = Flavor(self, flavor, ingredients_data)
             flavor.initialize()
-            flavor.load_sprite(Sprite, pygame, IMAGE_DIR)
+            flavor.load_sprite(Sprite, CONSTANTS.IMAGE_DIR)
             self.flavors.append(flavor)
+
+    def load_button_sprites(self):
+        for attr_value in vars(self.buttons).values():
+            sprite = Sprite(self, attr_value.name, attr_value.image_name)
+            sprite.initialize()
+            attr_value.surface = sprite.surface
 
     def initialize_self(self):
         self.screen.display_info = pygame.display.Info()
@@ -102,10 +108,10 @@ class Coordinator:
         for flavor in self.flavors:
             w = flavor.sprite.w * self.scale.image
             h = flavor.sprite.h * self.scale.image
-            flavor.sprite.scale(pygame, w, h)
+            flavor.sprite.scale(w, h)
 
     def load_background(self):
-        self.bg.surface = pygame.image.load(os.path.join(IMAGE_DIR, self.bg.name))
+        self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
         self.bg.surface = pygame.transform.scale(self.bg.surface, self.screen.dimensions)
 
     def set_scaled_w_h(self, w, h):
@@ -120,6 +126,12 @@ class Coordinator:
             flavor.y += self.grid.cell_height // 2 - flavor.image.get_height() // 2
             self.screen.blit(flavor.image,(flavor.x,flavor.y))
 
+    def state_main(self):
+        self.pygame.screen.blit(self.bg.surface,(0,0))
+
+    def state_walk_in(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
     def main_loop(self):
         while self.running:
             for event in pygame.event.get():
@@ -131,6 +143,8 @@ class Coordinator:
 
             self.pygame.screen.fill((0,0,0))
             self.pygame.screen.blit(self.bg.surface,(0,0))
+            self.draw_manager.draw_registry()
+            self.pygame.screen.blit(self.pygame.canvas, (0, 0))
             #self.blit_flavors()
             self.pygame.flip()
             self.pygame.clock.tick(self.pygame.fps)
