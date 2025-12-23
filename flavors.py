@@ -135,7 +135,9 @@ flavor_data_list = {
 
 class Flavor:
     def __init__(self, flavor_data):
+        #Reference tag
         self.tag = flavor_data["tag"]
+        #Visuals
         self.name = flavor_data["name"]
         self.x = 0
         self.y = 0
@@ -143,6 +145,8 @@ class Flavor:
         self.height = 0
         self.text = flavor_data["name"]
         self.image = None
+        self.image_name = flavor_data["image_name"]
+        #For production
         self.large_quick_par = flavor_data["large_quick_par"]
         self.small_quick_par = flavor_data["small_quick_par"]
         self.line_mix_par = flavor_data["line_mix_par"]
@@ -157,7 +161,6 @@ class Flavor:
         self.total_mix_weight = 0
         self.ingredients = flavor_data["ingredients"]
         self.totaled_ingredient_weight = 0
-        self.image_name = flavor_data["image_name"]
 
     def calculate_par_weight(self):
         self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)

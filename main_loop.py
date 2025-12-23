@@ -14,6 +14,12 @@ all_resolution_data = {
     },
 }
 
+layout_profiles = {
+    "small":  {"max_short": 600,          "base_width":  360, "base_height": 640, "font_size": 8},
+    "medium": {"max_short": 900,          "base_width":  768, "base_height": 640, "font_size": 12},
+    "large":  {"max_short": float('inf'), "base_width": 1920, "base_height": 640, "font_size": 16},
+}
+
 pygame.init()
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGE_DIR = os.path.join(SCRIPT_DIR, "images")
@@ -21,11 +27,17 @@ IMAGE_DIR = os.path.join(SCRIPT_DIR, "images")
 
 class Coordinator:
     def __init__(self):
+        self.scale_x = None
+        self.scale_y = None
+        self.resolution_profiles = layout_profiles
+        self.active_profile = None
+        self.short = None
         self.font_size = None
         self.image_scale = None
-        self.resolution_data = None
         self.grid = None
         self.display_info = None
+        self.base_width = None
+        self.base_height = None
         self.screen_width = 0
         self.screen_height = 0
         self.screen_dimensions = (0,0)
@@ -41,30 +53,39 @@ class Coordinator:
         self.display_info = pygame.display.Info()
         self.screen_width = self.display_info.current_w
         self.screen_height = self.display_info.current_h
+        self.short = min(self.screen_width, self.screen_height)
         self.screen_dimensions = (self.screen_width, self.screen_height)
         self.screen = pygame.display.set_mode(self.screen_dimensions)
-        self.set_resolution_data()
-        self.scale_images()
+        self.adjust_resolution()
         pygame.display.set_caption("Chicken Salad Production Software")
         self.clock = pygame.time.Clock()
         self.fps = 60
         self.running = True
-        self.bg_img_name = "stacey_sticker.jpg"
+        self.bg_img_name = "rainbow_bg.jpg"
         self.grid = Grid(self)
         self.grid.initialize_grid()
         self.load_background()
 
-    def set_resolution_data(self):
-        if "ANDROID_ROOT" in os.environ:
-            self.resolution_data = all_resolution_data["android"]
-        elif os.name == "nt":
-            self.resolution_data = all_resolution_data["windows"]
-        else:
-            print("Unsupported OS")
-            exit(1)
-        self.image_scale = self.resolution_data["image_scale"]
-        self.font_size = self.resolution_data["font_size"]
+    def adjust_resolution(self):
+        self.retrieve_resolution_data()
+        self.set_resolution_data()
         self.scale_images()
+
+    def retrieve_resolution_data(self):
+        for name, profile in self.resolution_profiles.items():
+            if self.short <= profile["max_short"]:
+                self.active_profile =  profile
+                break
+
+    def set_resolution_data(self):
+        self.base_width = self.active_profile["base_width"]
+        self.base_height = self.active_profile["base_height"]
+        self.font_size = self.active_profile["font_size"]
+        self.scale_x = self.screen_width / self.base_width
+        self.scale_y = self.screen_height / self.base_height
+        self.image_scale = min(self.scale_x, self.scale_y)
+        self.font_size = self.active_profile["font_size"] * self.image_scale
+
 
     def scale_images(self):
         for flavor in self.flavors:
@@ -75,9 +96,7 @@ class Coordinator:
 
     def load_background(self):
         self.bg_img = pygame.image.load(os.path.join(IMAGE_DIR, self.bg_img_name))
-        scaled_width = self.bg_img.get_width() * self.image_scale
-        scaled_height = self.bg_img.get_height() * self.image_scale
-        self.bg_img = pygame.transform.scale(self.bg_img, size = (scaled_width,scaled_height))
+        self.bg_img = pygame.transform.scale(self.bg_img, self.screen_dimensions)
 
 
     def set_scaled_w_h(self, w, h):
