@@ -12,6 +12,7 @@ pygame.init()
 class Coordinator:
     def __init__(self):
         #Classes
+
         self.draw_manager = None
         self.grid = None
         self.prep_sheet = None
@@ -36,6 +37,8 @@ class Coordinator:
         #State
         self.state = "main"
         self.running = True
+        #Sprites
+        self.dragged_sprite = None
 
     def initialize(self):
         self.initialize_classes()
@@ -132,6 +135,39 @@ class Coordinator:
     def state_walk_in(self):
         self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
 
+    def check_image_clicked(self, x, y):
+        for s in self.draw_manager.registry:
+            sprite_to_check = s if isinstance(s, list) else [s]
+            for sprite in sprite_to_check:
+                if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
+                    self.dragged_sprite = sprite
+
+    def move_sprite(self, x, y):
+        if self.dragged_sprite:
+            self.dragged_sprite.x = x - self.dragged_sprite.w // 2
+            self.dragged_sprite.y = y - self.dragged_sprite.h // 2
+
+    def handle_sprite_movement(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            self.check_image_clicked(mouse_x, mouse_y)
+        elif event.type == pygame.MOUSEMOTION:
+            self.move_sprite(*event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if self.dragged_sprite:
+                self.dragged_sprite = None
+        elif event.type == pygame.FINGERDOWN:
+            touch_x = event.x * self.screen.w
+            touch_y = event.y * self.screen.h
+            self.check_image_clicked(touch_x, touch_y)
+        elif event.type == pygame.FINGERMOTION:
+            touch_x = event.x * self.screen.w
+            touch_y = event.y * self.screen.h
+            self.move_sprite(touch_x, touch_y)
+        elif event.type == pygame.FINGERUP:
+            if self.dragged_sprite:
+                self.dragged_sprite = None
+
     def main_loop(self):
         while self.running:
             for event in pygame.event.get():
@@ -140,6 +176,7 @@ class Coordinator:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
+                self.handle_sprite_movement(event)
 
             self.pygame.screen.fill((0,0,0))
             self.pygame.screen.blit(self.bg.surface,(0,0))

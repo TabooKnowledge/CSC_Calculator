@@ -208,3 +208,4 @@ class Sprite:
         self.w = w
         self.h = h
         self.surface = pygame.transform.scale(self.surface, (w, h))
+
