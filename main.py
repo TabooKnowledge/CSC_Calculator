@@ -1,4 +1,4 @@
-from config import ingredients_data, flavors_data, resolution_profiles, CONSTANTS
+from config import ingredients_data, flavors_data, resolution_profiles, icons, buttons, CONSTANTS
 from classes import Ingredient, Flavor, PrepSheet, Grid, DrawManager, Sprite
 from types import SimpleNamespace
 import pygame
@@ -19,7 +19,7 @@ class Coordinator:
         self.ingredients = []
         self.flavors = []
         #Numbers
-        self.scale = SimpleNamespace(x=0, y=0, image=1, font=8)
+        self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
         self.base_resolution = SimpleNamespace(w=0, h=0)
         self.screen = SimpleNamespace(w=0, h=0, short=None, dimensions=None)
         #self.font_size = None
@@ -27,15 +27,8 @@ class Coordinator:
         self.pygame = SimpleNamespace(canvas=None, screen=None, clock=None, fps=None, flip=pygame.display.flip, display_info=None)
         #Images
         self.bg = SimpleNamespace(name="", surface=None)
-        self.buttons = SimpleNamespace(
-            reach_in=SimpleNamespace(name="Reach-In",image_name="reach_in_no_bg.png", surface=None),
-            walk_in=SimpleNamespace(name="Walk-In", image_name="walk_in_copy.png", surface=None),
-            quick=SimpleNamespace(name="Quick", image_name="quick_no_bg.png", surface=None),
-            b_production=SimpleNamespace(name="production_button", image_name="button_production_idle.png", surface=None),
-            b_reach_in=SimpleNamespace(name="reach_in_button", image_name="button_reach_in_idle.png", surface=None),
-            b_walk_in=SimpleNamespace(name="walk_in_button", image_name="button_walk_in_idle.png", surface=None),
-            b_quick=SimpleNamespace(name="quick_button", image_name="button_quick_idle.png", surface=None)
-        )
+        self.buttons = buttons
+        self.icons = icons
         #Resolution
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
@@ -55,9 +48,8 @@ class Coordinator:
         self.grid.initialize()
         self.draw_manager = DrawManager(self)
         self.initialize_ingredients()
-        self.load_button_sprites()
+        self.load_sprites()
         self.initialize_flavors()
-
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():
@@ -71,8 +63,12 @@ class Coordinator:
             #flavor.load_sprite(Sprite, CONSTANTS.IMAGE_DIR)
             self.flavors.append(flavor)
 
-    def load_button_sprites(self):
-        for attr_value in vars(self.buttons).values():
+    def load_sprites(self):
+        self.load_namespace_sprites(self.buttons)
+        self.load_namespace_sprites(self.icons)
+
+    def load_namespace_sprites(self, namespace):
+        for attr_value in vars(namespace).values():
             sprite = Sprite(self, attr_value.name, attr_value.image_name)
             sprite.initialize()
             attr_value.surface = sprite.surface
@@ -110,7 +106,8 @@ class Coordinator:
         self.scale.font = self.active_profile["font_size"]
         self.scale.x = self.screen.w / self.base_resolution.w
         self.scale.y = self.screen.h / self.base_resolution.h
-        self.scale.image = min(self.scale.x, self.scale.y)
+        self.scale.multiplier = self.active_profile["scale_multiplier"]
+        self.scale.image = min(self.scale.x, self.scale.y) * self.scale.multiplier
         self.scale.font = self.active_profile["font_size"] * self.scale.image
 
     def load_background(self):

@@ -142,7 +142,27 @@ flavors_data = {
 
 
 resolution_profiles = {
-    "small":  {"max_short": 600,          "base_width":  360, "base_height": 640, "font_size": 8},
-    "medium": {"max_short": 900,          "base_width":  768, "base_height": 640, "font_size": 12},
-    "large":  {"max_short": float('inf'), "base_width": 1920, "base_height": 640, "font_size": 16},
+    "small":  {"max_short": 600,          "base_width":  360, "base_height": 640, "scale_multiplier": .8, "font_size": 8},
+    "medium": {"max_short": 800,          "base_width":  768, "base_height": 640, "scale_multiplier": .7, "font_size": 12},
+    "large":  {"max_short": float('inf'), "base_width": 1920, "base_height": 640, "scale_multiplier": .8, "font_size": 16},
 }
+
+
+icons =  SimpleNamespace(
+            reach_in=SimpleNamespace(name="icon_reach_in",image_name="icon_reach_in.png", surface=None),
+            walk_in=SimpleNamespace(name="icon_walk_in", image_name="icon_walk_in.png", surface=None),
+            quick=SimpleNamespace(name="icon_quick", image_name="icon_quick.png", surface=None)
+)
+
+
+buttons = SimpleNamespace(
+            b_production=SimpleNamespace(name="button_production", image_name="button_production_idle.png", surface=None, callback=None),
+            b_reach_in=SimpleNamespace(name="button_reach_in", image_name="button_reach_in_idle.png", surface=None, callback=None),
+            b_walk_in=SimpleNamespace(name="button_walk_in", image_name="button_walk_in_idle.png", surface=None, callback=None),
+            b_quick=SimpleNamespace(name="button_quick", image_name="button_quick_idle.png", surface=None, callback=None),
+)
+
+
+states = SimpleNamespace(reach_in=SimpleNamespace(scale=2,
+                                                  )
+)

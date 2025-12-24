@@ -215,7 +215,7 @@ class Sprite:
         canvas.blit(self.surface, (self.x, self.y))
 
     def scale(self, w, h):
-        self.w = w*.6
-        self.h = h*.6
-        self.surface = pygame.transform.scale(self.surface, (w*.6, h*.6))
+        self.w = w
+        self.h = h
+        self.surface = pygame.transform.scale(self.surface, (w, h))
 
