@@ -1,5 +1,5 @@
 from config import ingredients_data, flavors_data, resolution_profiles, icons, buttons, CONSTANTS
-from classes import Ingredient, Flavor, PrepSheet, Grid, DrawManager, Sprite
+from classes import Ingredient, Flavor, PrepSheet, Grid, DrawManager, Sprite, AnimationManager
 from types import SimpleNamespace
 import pygame
 import sys
@@ -12,7 +12,7 @@ pygame.init()
 class Coordinator:
     def __init__(self):
         #Classes
-
+        self.animation_manager = None
         self.draw_manager = None
         self.grid = None
         self.prep_sheet = None
@@ -28,7 +28,8 @@ class Coordinator:
         #Images
         self.bg = SimpleNamespace(name="", surface=None)
         self.buttons = buttons
-        self.icons = icons
+        self.menu_icons = icons
+        #self.flavor_icons = flavor_icons
         #Resolution
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
@@ -39,38 +40,43 @@ class Coordinator:
         self.dragged_sprite = None
 
     def initialize(self):
+        self.create_classes()
         self.initialize_classes()
         self.initialize_self()
 
-    def initialize_classes(self):
+    def create_classes(self):
         self.prep_sheet = PrepSheet(self)
         self.grid = Grid(self)
-        self.grid.initialize()
         self.draw_manager = DrawManager(self)
+        self.animation_manager = AnimationManager(self)
+
+    def initialize_classes(self):
+        self.grid.initialize()
         self.initialize_ingredients()
         self.load_sprites()
         self.initialize_flavors()
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():
-            ingredient = Ingredient(self, {"name": name, "weight": weight})
+            ingredient = Ingredient(self, name, weight)
             self.ingredients.append(ingredient)
 
     def initialize_flavors(self):
         for flavor in flavors_data.values():
             flavor = Flavor(self, flavor, ingredients_data)
             flavor.initialize()
-            #flavor.load_sprite(Sprite, CONSTANTS.IMAGE_DIR)
+            flavor.load_sprite(Sprite)
             self.flavors.append(flavor)
 
     def load_sprites(self):
         self.load_namespace_sprites(self.buttons)
-        self.load_namespace_sprites(self.icons)
+        self.load_namespace_sprites(self.menu_icons)
 
     def load_namespace_sprites(self, namespace):
         for attr_value in vars(namespace).values():
+            _state_tag = getattr(attr_value, "state_tag", None)
             sprite = Sprite(self, attr_value.name, attr_value.image_name)
-            sprite.initialize()
+            sprite.initialize(_state_tag)
             attr_value.surface = sprite.surface
 
     def initialize_self(self):
@@ -129,21 +135,22 @@ class Coordinator:
     def state_main(self):
         self.pygame.screen.blit(self.bg.surface,(0,0))
 
+
     def state_walk_in(self):
         self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
 
-    def check_image_clicked(self, x, y):
-        for s in self.draw_manager.registry:
-            sprite_to_check = s if isinstance(s, list) else [s]
-            for sprite in sprite_to_check:
-                print(f"Name: {sprite.name}, X: {sprite.x}, Y: {sprite.y}")
-                if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
-                    self.dragged_sprite = sprite
 
-    def move_sprite(self, x, y):
-        if self.dragged_sprite:
-            self.dragged_sprite.x = x - self.dragged_sprite.w // 2
-            self.dragged_sprite.y = y - self.dragged_sprite.h // 2
+    def state_reach_in(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
+
+    def state_quick(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
+
+    def state_production(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
 
     def handle_sprite_movement(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -166,8 +173,41 @@ class Coordinator:
             if self.dragged_sprite:
                 self.dragged_sprite = None
 
+    def check_image_clicked(self, x, y):
+        for s in self.draw_manager.registry:
+            sprite_to_check = s if isinstance(s, list) else [s]
+            for sprite in sprite_to_check:
+                print(f"Name: {sprite.name}, X: {sprite.x}, Y: {sprite.y}")
+                if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
+                    if sprite.state_tag is not None:
+                        self.state = sprite.state_tag
+                    self.dragged_sprite = sprite
+
+    def move_sprite(self, x, y):
+        if self.dragged_sprite:
+            self.dragged_sprite.x = x - self.dragged_sprite.w // 2
+            self.dragged_sprite.y = y - self.dragged_sprite.h // 2
+
     def main_loop(self):
         while self.running:
+            if self.state == "main":
+                _true = True
+                #print("main")
+            elif self.state == "reach_in":
+                _true = True
+                #print("reach_in")
+            elif self.state == "walk_in":
+                _true = True
+                #print("walk_in")
+            elif self.state == "quick":
+                _true = True
+                #print("quick")
+            elif self.state == "production":
+                _true = True
+                #print("production")
+            for sprite in self.draw_manager.registry:
+                if self.state in sprite.name:
+                    self.animation_manager.lerp_alpha(sprite, 0)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False

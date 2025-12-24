@@ -151,15 +151,15 @@ resolution_profiles = {
 icons =  SimpleNamespace(
             reach_in=SimpleNamespace(name="icon_reach_in",image_name="icon_reach_in.png", surface=None),
             walk_in=SimpleNamespace(name="icon_walk_in", image_name="icon_walk_in.png", surface=None),
-            quick=SimpleNamespace(name="icon_quick", image_name="icon_quick.png", surface=None)
+            quick=SimpleNamespace(name="icon_quick", image_name="icon_quick.png", surface=None),
 )
 
 
 buttons = SimpleNamespace(
-            b_production=SimpleNamespace(name="button_production", image_name="button_production_idle.png", surface=None, callback=None),
-            b_reach_in=SimpleNamespace(name="button_reach_in", image_name="button_reach_in_idle.png", surface=None, callback=None),
-            b_walk_in=SimpleNamespace(name="button_walk_in", image_name="button_walk_in_idle.png", surface=None, callback=None),
-            b_quick=SimpleNamespace(name="button_quick", image_name="button_quick_idle.png", surface=None, callback=None),
+            b_production=SimpleNamespace(name="button_production", image_name="button_production_idle.png", surface=None, state_tag="production"),
+            b_reach_in=SimpleNamespace(name="button_reach_in", image_name="button_reach_in_idle.png", surface=None, state_tag="reach_in"),
+            b_walk_in=SimpleNamespace(name="button_walk_in", image_name="button_walk_in_idle.png", surface=None, state_tag="walk_in"),
+            b_quick=SimpleNamespace(name="button_quick", image_name="button_quick_idle.png", surface=None, state_tag="quick"),
 )
 
 

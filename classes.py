@@ -6,10 +6,10 @@ import pygame
 
 
 class Ingredient:
-    def __init__(self, coordinator, ingredient_data):
+    def __init__(self, coordinator, name, weight):
         self.coordinator = coordinator
-        self.name = ingredient_data["name"]
-        self.weight = ingredient_data["weight"]
+        self.name = name
+        self.weight = weight
         self.totaled_weight = 0
 
     def total_weight(self, mix_weight):
@@ -57,7 +57,7 @@ class Flavor:
                     self.ingredients.append(ingredient)
                     break
 
-    def load_sprite(self, sprite_class, image_directory):
+    def load_sprite(self, sprite_class):
         self.sprite = sprite_class(self.coordinator, self.name, self.img_name)
         self.sprite.initialize()
 
@@ -170,6 +170,8 @@ class DrawManager:
                 if scale:
                     w = sprite.w * self.coordinator.scale.image
                     h = sprite.h * self.coordinator.scale.image
+                    sprite.original_w = w
+                    sprite.original_h = h
                     sprite.scale(w, h)
                 else:
                     sprite.draw(self.canvas)
@@ -197,15 +199,21 @@ class DrawManager:
 class Sprite:
     def __init__(self, coordinator, name, img_name):
         self.coordinator = coordinator
+        self.state_tag = None
         self.name = name
         self.img_name = img_name
         self.x = 0
         self.y = 0
+        self.original_x = 0
+        self.original_y = 0
         self.w = 0
         self.h = 0
+        self.original_w = 0
+        self.original_h = 0
         self.surface = None
 
-    def initialize(self):
+    def initialize(self, state_tag=None):
+        self.state_tag = state_tag
         self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
         self.w = self.surface.get_width()
         self.h = self.surface.get_height()
@@ -218,4 +226,37 @@ class Sprite:
         self.w = w
         self.h = h
         self.surface = pygame.transform.scale(self.surface, (w, h))
+
+class AnimationManager:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self.lerp_speed = SimpleNamespace(move=1, scale=1, alpha=.01)
+        self.active_animations = []
+
+    def lerp_move(self, sprite, target_x, target_y):
+        sprite.x += (target_x - sprite.x) * self.lerp_speed.move
+        sprite.y += (target_y - sprite.y) * self.lerp_speed.move
+        if abs(sprite.x - target_x) <= 5:
+            sprite.x = target_x
+        if abs(sprite.y - target_y) <= 5:
+            sprite.y = target_y
+
+    def lerp_scale(self, sprite, target_w, target_h):
+        sprite.w += (target_w- sprite.w) * self.lerp_speed.scale
+        sprite.h += (target_h - sprite.h) * self.lerp_speed.scale
+        if abs(sprite.w - target_w) <= 5:
+            sprite.w = target_w
+        if abs(sprite.h - target_h) <= 5:
+            sprite.h = target_h
+
+    def lerp_alpha(self, sprite, target_a):
+        current_alpha = sprite.surface.get_alpha()
+        if current_alpha is None:
+            current_alpha = 255
+
+        new_alpha = current_alpha + (target_a - current_alpha) * self.lerp_speed.alpha
+        if abs(new_alpha - target_a) <= 25:
+            new_alpha = target_a
+        sprite.surface.set_alpha(int(new_alpha))
+
 
