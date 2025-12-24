@@ -29,8 +29,13 @@ class Coordinator:
         self.bg = SimpleNamespace(name="", surface=None)
         self.buttons = SimpleNamespace(
             reach_in=SimpleNamespace(name="Reach-In",image_name="reach_in_no_bg.png", surface=None),
-            walk_in=SimpleNamespace(name="Walk-In", image_name="walk_in.png", surface=None),
-            quick=SimpleNamespace(name="Quick", image_name="quick_no_bg.png", surface=None))
+            walk_in=SimpleNamespace(name="Walk-In", image_name="walk_in_copy.png", surface=None),
+            quick=SimpleNamespace(name="Quick", image_name="quick_no_bg.png", surface=None),
+            b_production=SimpleNamespace(name="production_button", image_name="button_production_idle.png", surface=None),
+            b_reach_in=SimpleNamespace(name="reach_in_button", image_name="button_reach_in_idle.png", surface=None),
+            b_walk_in=SimpleNamespace(name="walk_in_button", image_name="button_walk_in_idle.png", surface=None),
+            b_quick=SimpleNamespace(name="quick_button", image_name="button_quick_idle.png", surface=None)
+        )
         #Resolution
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
@@ -50,8 +55,9 @@ class Coordinator:
         self.grid.initialize()
         self.draw_manager = DrawManager(self)
         self.initialize_ingredients()
-        self.initialize_flavors()
         self.load_button_sprites()
+        self.initialize_flavors()
+
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():
@@ -62,7 +68,7 @@ class Coordinator:
         for flavor in flavors_data.values():
             flavor = Flavor(self, flavor, ingredients_data)
             flavor.initialize()
-            flavor.load_sprite(Sprite, CONSTANTS.IMAGE_DIR)
+            #flavor.load_sprite(Sprite, CONSTANTS.IMAGE_DIR)
             self.flavors.append(flavor)
 
     def load_button_sprites(self):
@@ -133,6 +139,7 @@ class Coordinator:
         for s in self.draw_manager.registry:
             sprite_to_check = s if isinstance(s, list) else [s]
             for sprite in sprite_to_check:
+                print(f"Name: {sprite.name}, X: {sprite.x}, Y: {sprite.y}")
                 if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
                     self.dragged_sprite = sprite
 
@@ -177,8 +184,19 @@ class Coordinator:
             self.draw_manager.draw_registry()
             self.pygame.screen.blit(self.pygame.canvas, (0, 0))
             #self.blit_flavors()
+            #self.draw_grid()
             self.pygame.flip()
             self.pygame.clock.tick(self.pygame.fps)
+
+    def draw_grid(self):
+        cols = self.screen.w // 30
+        rows = self.screen.h // 30
+        for c in range(cols):
+            x = c * 30
+            pygame.draw.line(self.pygame.screen, (255, 255, 255), (x, 0), (x, self.screen.h))
+        for r in range(rows):
+            y = r * 30
+            pygame.draw.line(self.pygame.screen, (255, 255, 255), (0, y), (self.screen.w, y))
 
 
 coordinator = Coordinator()
