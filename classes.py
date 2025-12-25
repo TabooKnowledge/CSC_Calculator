@@ -311,6 +311,11 @@ class EventManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
         self.dragged_sprite = None
+        self.clickable_sprites = None
+
+    def initialize(self):
+        # Cache a flat list of clickable sprites
+        self.clickable_sprites = [s for s in self.coordinator.draw_manager.registry if hasattr(s, "name") and not isinstance(s, list)]
 
     def update(self, event):
         self.handle_sprite_movement(event)
@@ -337,14 +342,11 @@ class EventManager:
                 self.dragged_sprite = None
 
     def check_image_clicked(self, x, y):
-        for s in (x for x in self.coordinator.draw_manager.registry if hasattr(x, "name")):
-            sprite_to_check = s if isinstance(s, list) else [s]
-            for sprite in sprite_to_check:
-                print(f"Name: {sprite.name}, X: {sprite.x}, Y: {sprite.y}")
-                if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
-                    if sprite.state_tag is not None:
-                        self.coordinator.state_manager.state = sprite.state_tag
-                    self.dragged_sprite = sprite
+        for sprite in self.clickable_sprites:
+            if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
+                if sprite.state_tag is not None:
+                    self.coordinator.state_manager.state = sprite.state_tag
+                self.dragged_sprite = sprite
 
     def move_sprite(self, x, y):
         if self.dragged_sprite:
@@ -450,7 +452,6 @@ class UiManager:
 
     def update_screen(self):
         self.pygame.screen.fill((0, 0, 0))
-        self.pygame.screen.blit(self.bg.surface, (0, 0))
 
     def draw_canvas(self):
         self.pygame.screen.blit(self.pygame.canvas, (0, 0))
@@ -525,7 +526,6 @@ class Background:
         w = self.coordinator.ui_manager.screen.w
         h = self.coordinator.ui_manager.screen.h
         self.nine_slice_bg = NineSlice(self.border_image, self.border_thickness).render(w, h)
-        self.coordinator.draw_manager.subscribe_object(self)
 
     def draw(self, canvas):
         w = canvas.get_width()

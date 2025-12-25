@@ -1,4 +1,5 @@
 from config import ingredients_data, resolution_profiles, flavors_data, icons_data, buttons_data, CONSTANTS
+import cProfile
 from classes import *
 from types import SimpleNamespace
 import pygame
@@ -35,7 +36,7 @@ class Coordinator:
     def initialize(self):
         self.create_classes()
         self.initialize_classes()
-        self.initialize_self()
+        self.running = True
 
     def create_classes(self):
         self.sprite_manager = SpriteManager(self)
@@ -54,6 +55,7 @@ class Coordinator:
         self.ui_manager.initialize()
         self.grid.initialize()
         self.background.initialize()
+        self.event_manager.initialize()
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():
@@ -66,10 +68,6 @@ class Coordinator:
             flavor.initialize()
             flavor.load_sprite(Sprite)
             self.flavors.append(flavor)
-
-    def initialize_self(self):
-        self.running = True
-        self.draw_manager.draw_registry()
 
     def main_loop(self):
         while self.running:
@@ -87,7 +85,6 @@ class Coordinator:
             self.sprite_manager.update()
             self.draw_manager.draw_registry()
             self.ui_manager.draw_canvas()
-            #self.blit_flavors()
             #self.draw_grid()
             pygame.display.flip()
             self.clock.tick(self.fps)
@@ -97,6 +94,7 @@ class Coordinator:
 
 coordinator = Coordinator()
 coordinator.initialize()
-coordinator.main_loop()
+cProfile.run("coordinator.main_loop()")
+#coordinator.main_loop()
 pygame.quit()
 sys.exit()
