@@ -1,4 +1,4 @@
-from config import CONSTANTS
+from config import *
 import math
 from types import SimpleNamespace
 import os
@@ -133,13 +133,15 @@ class Grid:
         self.coordinator = coordinator
         self.cols = 4
         self.rows = 3
-        self.cell_width = self.coordinator.screen.w // self.cols
-        self.cell_height = self.coordinator.screen.h // self.rows
+        self.cell_width = 1
+        self.cell_height = 1
         self.coord = []
 
     def initialize(self, rows=None, cols=None):
         self.rows = rows if rows is not None else self.rows
         self.cols = cols if cols is not None else self.cols
+        self.cell_width = self.coordinator.ui_manager.screen.w // self.cols
+        self.cell_height = self.coordinator.ui_manager.screen.h // self.rows
         for r in range(self.rows):
             row = []
             for c in range(self.cols):
@@ -165,17 +167,16 @@ class DrawManager:
                 self.draw_registry( False, sprite)
             elif self.validate(sprite):
                 if scale:
-                    w = sprite.w * self.coordinator.scale.image
-                    h = sprite.h * self.coordinator.scale.image
+                    w = sprite.w * self.coordinator.ui_manager.scale.image
+                    h = sprite.h * self.coordinator.ui_manager.scale.image
                     sprite.origin_w = w
                     sprite.origin_h = h
                     sprite.scale(w, h)
                 else:
                     sprite.draw(self.canvas)
 
-
     def update_canvas(self):
-        self.canvas = self.coordinator.pygame.canvas
+        self.canvas = self.coordinator.ui_manager.pygame.canvas
         self.canvas.fill((0,0,0))
 
     def subscribe_sprite(self, sprite):
@@ -185,8 +186,6 @@ class DrawManager:
         for r_sprite in self.registry:
             if r_sprite == sprite:
                 self.registry.remove(sprite)
-
-
 
     @staticmethod
     def validate(value):
@@ -226,6 +225,7 @@ class Sprite:
         self.w = w
         self.h = h
         self.surface = pygame.transform.scale(self.surface, (w, h))
+
 
 class AnimationManager:
     def __init__(self, coordinator):
@@ -291,3 +291,205 @@ class AnimationManager:
         if abs(new_alpha - target_a) <= 5:
             new_alpha = target_a
         sprite.surface.set_alpha(int(new_alpha))
+
+
+class EventManager:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self.dragged_sprite = None
+
+    def update(self, event):
+        self.handle_sprite_movement(event)
+
+    def handle_sprite_movement(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = event.pos
+            self.check_image_clicked(mouse_x, mouse_y)
+        elif event.type == pygame.MOUSEMOTION:
+            self.move_sprite(*event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if self.dragged_sprite:
+                self.dragged_sprite = None
+        elif event.type == pygame.FINGERDOWN:
+            touch_x = event.x * self.coordinator.screen.w
+            touch_y = event.y * self.coordinator.screen.h
+            self.check_image_clicked(touch_x, touch_y)
+        elif event.type == pygame.FINGERMOTION:
+            touch_x = event.x * self.coordinator.screen.w
+            touch_y = event.y * self.coordinator.screen.h
+            self.move_sprite(touch_x, touch_y)
+        elif event.type == pygame.FINGERUP:
+            if self.dragged_sprite:
+                self.dragged_sprite = None
+
+    def check_image_clicked(self, x, y):
+        for s in self.coordinator.draw_manager.registry:
+            sprite_to_check = s if isinstance(s, list) else [s]
+            for sprite in sprite_to_check:
+                print(f"Name: {sprite.name}, X: {sprite.x}, Y: {sprite.y}")
+                if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
+                    if sprite.state_tag is not None:
+                        self.coordinator.state_manager.state = sprite.state_tag
+                    self.dragged_sprite = sprite
+
+    def move_sprite(self, x, y):
+        if self.dragged_sprite:
+            self.dragged_sprite.x = x - self.dragged_sprite.w // 2
+            self.dragged_sprite.y = y - self.dragged_sprite.h // 2
+
+    def check_button_click(self):
+        for sprite in self.coordinator.draw_manager.registry:
+            if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name and sprite.name != "icon_quick":
+                print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
+                sprite.home_x = sprite.x
+                sprite.home_y = sprite.y
+                scale = 1.75
+                center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
+                center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
+                self.coordinator.animation_manager.lerp_scale(sprite, scale)
+                self.coordinator.animation_manager.lerp_move(sprite, center_x, center_y)
+
+
+class UiManager:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self.flavors = []
+        self.buttons = []
+        self.icons = []
+        self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
+        self.base_resolution = SimpleNamespace(w=0, h=0)
+        self.screen = SimpleNamespace(w=0, h=0, short=None, dimensions=None)
+        self.resolution_profiles = None
+        self.bg = None
+        self.buttons = buttons_data
+        self.icons = icons_data
+        self.bg = SimpleNamespace(name="", surface=None)
+        self.resolution_profiles = resolution_profiles
+        self.active_profile = None
+        self.pygame = SimpleNamespace(canvas=None, screen=None, display_info=None)
+
+    def initialize(self):
+        self.screen.display_info = pygame.display.Info()
+        self.screen.w = self.screen.display_info.current_w
+        self.screen.h = self.screen.display_info.current_h
+        self.screen.short = min(self.screen.w, self.screen.h)
+        self.screen.dimensions = (self.screen.w, self.screen.h)
+        self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
+        self.pygame.canvas = pygame.Surface(self.screen.dimensions)
+        pygame.display.set_caption("Chicken Salad Production Software")
+        self.bg.name = "rainbow_bg.jpg"
+        self.load_background()
+        self.adjust_resolution()
+        self.load_sprites()
+
+    def load_background(self):
+        self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
+        self.bg.surface = pygame.transform.scale(self.bg.surface, self.screen.dimensions)
+
+    def adjust_resolution(self):
+        self.retrieve_resolution_data()
+        self.set_resolution_data()
+
+    def retrieve_resolution_data(self):
+        for attr_value in vars(self.resolution_profiles).values():
+            if self.screen.short <= attr_value.max_short:
+                self.active_profile = attr_value
+                break
+
+    def set_resolution_data(self):
+        self.base_resolution.w = self.active_profile.base_width
+        self.base_resolution.h = self.active_profile.base_height
+        self.scale.font = self.active_profile.font_size
+        self.scale.x = self.screen.w / self.base_resolution.w
+        self.scale.y = self.screen.h / self.base_resolution.h
+        self.scale.multiplier = self.active_profile.scale_multiplier
+        self.scale.image = min(self.scale.x, self.scale.y) * self.scale.multiplier
+        self.scale.font = self.active_profile.font_size * self.scale.image
+
+    def load_sprites(self):
+        self.coordinator.sprite_manager.load_namespace_sprites(self.buttons, "button")
+        self.coordinator.sprite_manager.load_namespace_sprites(self.icons, "icon")
+
+    def blit_flavors(self):
+        for i, flavor in enumerate(self.flavors):
+            row = i // self.coordinator.grid.cols
+            col = i % self.coordinator.grid.cols
+            flavor.x, flavor.y = self.coordinator.grid.coord[row][col]
+            flavor.x += self.coordinator.grid.cell_width // 2 - flavor.image.get_width() // 2
+            flavor.y += self.coordinator.grid.cell_height // 2 - flavor.image.get_height() // 2
+            self.screen.blit(flavor.image, (flavor.x, flavor.y))
+
+    def update_screen(self):
+        self.pygame.screen.fill((0, 0, 0))
+        self.pygame.screen.blit(self.bg.surface, (0, 0))
+
+    def draw_canvas(self):
+        self.pygame.screen.blit(self.pygame.canvas, (0, 0))
+
+    def draw_grid(self):
+        cols = self.screen.w // 30
+        rows = self.screen.h // 30
+        for c in range(cols):
+            x = c * 30
+            pygame.draw.line(self.pygame.screen, (255, 255, 255), (x, 0), (x, self.screen.h))
+        for r in range(rows):
+            y = r * 30
+            pygame.draw.line(self.pygame.screen, (255, 255, 255), (0, y), (self.screen.w, y))
+
+
+class StateManager:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self.state = "main"
+
+    def update(self):
+        self.check_state()
+
+    def check_state(self):
+        if self.state == "main":
+            _true = True
+            # print("main")
+        elif self.state == "reach_in":
+            _true = True
+            # print("reach_in")
+        elif self.state == "walk_in":
+            _true = True
+            # print("walk_in")
+        elif self.state == "quick":
+            _true = True
+            # print("quick")
+        elif self.state == "production":
+            _true = True
+            # print("production")
+
+    def state_main(self):
+        self.pygame.screen.blit(self.bg.surface,(0,0))
+
+
+    def state_walk_in(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
+
+    def state_reach_in(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
+
+    def state_quick(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
+
+    def state_production(self):
+        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+
+
+class SpriteManager:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self.sprites = []
+
+    def load_namespace_sprites(self, namespace, img_tag=None):
+        for attr_value in vars(namespace).values():
+            sprite = Sprite(self.coordinator, attr_value.name, attr_value.image_name)
+            sprite.state_tag = getattr(attr_value, "state_tag", None)
+            sprite.initialize(img_tag)
+            attr_value.surface = sprite.surface
