@@ -325,12 +325,12 @@ class EventManager:
             if self.dragged_sprite:
                 self.dragged_sprite = None
         elif event.type == pygame.FINGERDOWN:
-            touch_x = event.x * self.coordinator.ui_manager.pygame.screen.w
-            touch_y = event.y * self.coordinator.ui_manager.pygame.screen.h
+            touch_x = event.x * self.coordinator.ui_manager.screen.w
+            touch_y = event.y * self.coordinator.ui_manager.screen.h
             self.check_image_clicked(touch_x, touch_y)
         elif event.type == pygame.FINGERMOTION:
-            touch_x = event.x * self.coordinator.ui_manager.pygame.screen.w
-            touch_y = event.y * self.coordinator.ui_manager.pygame.screen.h
+            touch_x = event.x * self.coordinator.ui_manager.screen.w
+            touch_y = event.y * self.coordinator.ui_manager.screen.h
             self.move_sprite(touch_x, touch_y)
         elif event.type == pygame.FINGERUP:
             if self.dragged_sprite:
@@ -516,19 +516,22 @@ class Background:
         self.coordinator = coordinator
         self.img_name = "bg_border_blue.png"
         self.border_image = None
+        self.nine_slice_bg = None
         self.border_thickness = 8
         self.nine_slice = None
 
     def initialize(self):
         self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
-        self.nine_slice = NineSlice(self.border_image, self.border_thickness)
+        w = self.coordinator.ui_manager.screen.w
+        h = self.coordinator.ui_manager.screen.h
+        self.nine_slice_bg = NineSlice(self.border_image, self.border_thickness).render(w, h)
         self.coordinator.draw_manager.subscribe_object(self)
 
     def draw(self, canvas):
         w = canvas.get_width()
         h = canvas.get_height()
 
-        canvas.blit(self.nine_slice.render(w, h), (0, 0))
+        canvas.blit(self.nine_slice_bg, (0, 0))
 
 
 class NineSlice:
