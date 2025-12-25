@@ -158,28 +158,21 @@ class DrawManager:
         self.registry = []
         self.canvas = None
 
-    def draw_registry(self, scale=False, registry=None):
+    def draw_registry(self, registry=None):
         self.update_canvas()
         if registry is None:
             registry = self.registry
         for sprite in registry:
             if isinstance(sprite, list):
-                self.draw_registry( False, sprite)
-            elif self.validate(sprite):
-                if scale:
-                    w = sprite.w * self.coordinator.ui_manager.scale.image
-                    h = sprite.h * self.coordinator.ui_manager.scale.image
-                    sprite.origin_w = w
-                    sprite.origin_h = h
-                    sprite.scale(w, h)
-                else:
-                    sprite.draw(self.canvas)
+                self.draw_registry(sprite)
+            elif validate_draw(sprite):
+                sprite.draw(self.canvas)
 
     def update_canvas(self):
         self.canvas = self.coordinator.ui_manager.pygame.canvas
         self.canvas.fill((0,0,0))
 
-    def subscribe_sprite(self, sprite):
+    def subscribe_object(self, sprite):
         self.registry.append(sprite)
 
     def unsubscribe_sprite(self, sprite):
@@ -187,9 +180,22 @@ class DrawManager:
             if r_sprite == sprite:
                 self.registry.remove(sprite)
 
-    @staticmethod
-    def validate(value):
-        return isinstance(value, Sprite)
+
+class SpriteManager:
+    def __init__(self, coordinator):
+        self.coordinator = coordinator
+        self.sprites = []
+
+    def update(self):
+        for sprite in self.sprites:
+            sprite.update()
+
+    def load_namespace_sprites(self, namespace, img_tag=None):
+        for attr_value in vars(namespace).values():
+            sprite = Sprite(self.coordinator, attr_value.name, attr_value.image_name)
+            sprite.state_tag = getattr(attr_value, "state_tag", None)
+            sprite.initialize(img_tag)
+            attr_value.surface = sprite.surface
 
 
 class Sprite:
@@ -203,12 +209,17 @@ class Sprite:
         self.y = 0
         self.origin_x = 0
         self.origin_y = 0
+        self.pos = SimpleNamespace(x=0, y=0, origin_x=0, origin_y=0, center_x=0, center_y=0)
+        self.at_home_pos = True
         self.w = 0
         self.h = 0
         self.origin_w = 0
         self.origin_h = 0
+        self.at_home_scale = True
         self.surface = None
         self.origin_surface = None
+        alpha = 255
+        render = True
 
     def initialize(self, img_tag):
         self.img_tag = img_tag
@@ -216,7 +227,10 @@ class Sprite:
         self.origin_surface = self.surface
         self.w = self.surface.get_width()
         self.h = self.surface.get_height()
-        self.coordinator.draw_manager.subscribe_sprite(self)
+        self.coordinator.draw_manager.subscribe_object(self)
+
+    def update(self):
+        print(f"{self.name} updated")
 
     def draw(self, canvas):
         canvas.blit(self.surface, (self.x, self.y))
@@ -224,7 +238,7 @@ class Sprite:
     def scale(self, w, h):
         self.w = w
         self.h = h
-        self.surface = pygame.transform.scale(self.surface, (w, h))
+        self.surface = pygame.transform.scale(self.origin_surface, (w, h))
 
 
 class AnimationManager:
@@ -323,7 +337,7 @@ class EventManager:
                 self.dragged_sprite = None
 
     def check_image_clicked(self, x, y):
-        for s in self.coordinator.draw_manager.registry:
+        for s in (x for x in self.coordinator.draw_manager.registry if hasattr(x, "name")):
             sprite_to_check = s if isinstance(s, list) else [s]
             for sprite in sprite_to_check:
                 print(f"Name: {sprite.name}, X: {sprite.x}, Y: {sprite.y}")
@@ -339,15 +353,16 @@ class EventManager:
 
     def check_button_click(self):
         for sprite in self.coordinator.draw_manager.registry:
-            if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name and sprite.name != "icon_quick":
-                print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
-                sprite.home_x = sprite.x
-                sprite.home_y = sprite.y
-                scale = 1.75
-                center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
-                center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
-                self.coordinator.animation_manager.lerp_scale(sprite, scale)
-                self.coordinator.animation_manager.lerp_move(sprite, center_x, center_y)
+            if hasattr(sprite, "img_tag"):
+                if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name:
+                    print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
+                    sprite.home_x = sprite.x
+                    sprite.home_y = sprite.y
+                    scale = 1.75
+                    center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
+                    center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
+                    self.coordinator.animation_manager.lerp_scale(sprite, scale)
+                    self.coordinator.animation_manager.lerp_move(sprite, center_x, center_y)
 
 
 class UiManager:
@@ -367,6 +382,7 @@ class UiManager:
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
         self.pygame = SimpleNamespace(canvas=None, screen=None, display_info=None)
+        self.center = SimpleNamespace(x=0, y=0)
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
@@ -381,6 +397,7 @@ class UiManager:
         self.load_background()
         self.adjust_resolution()
         self.load_sprites()
+        self.scale_sprites()
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
@@ -409,6 +426,18 @@ class UiManager:
     def load_sprites(self):
         self.coordinator.sprite_manager.load_namespace_sprites(self.buttons, "button")
         self.coordinator.sprite_manager.load_namespace_sprites(self.icons, "icon")
+
+    def scale_sprites(self, registry=None):
+        registry = registry if registry is not None else self.coordinator.draw_manager.registry
+        for sprite in registry:
+            if isinstance(sprite, list):
+                self.scale_sprites(sprite)
+            elif isinstance(sprite, Sprite):
+                w = sprite.w * self.coordinator.ui_manager.scale.image
+                h = sprite.h * self.coordinator.ui_manager.scale.image
+                sprite.origin_w = w
+                sprite.origin_h = h
+                sprite.scale(w, h)
 
     def blit_flavors(self):
         for i, flavor in enumerate(self.flavors):
@@ -482,14 +511,67 @@ class StateManager:
         self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
 
 
-class SpriteManager:
+class Background:
     def __init__(self, coordinator):
         self.coordinator = coordinator
-        self.sprites = []
+        self.img_name = "bg_border_blue.png"
+        self.border_image = None
+        self.border_thickness = 8
+        self.nine_slice = None
 
-    def load_namespace_sprites(self, namespace, img_tag=None):
-        for attr_value in vars(namespace).values():
-            sprite = Sprite(self.coordinator, attr_value.name, attr_value.image_name)
-            sprite.state_tag = getattr(attr_value, "state_tag", None)
-            sprite.initialize(img_tag)
-            attr_value.surface = sprite.surface
+    def initialize(self):
+        self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
+        self.nine_slice = NineSlice(self.border_image, self.border_thickness)
+        self.coordinator.draw_manager.subscribe_object(self)
+
+    def draw(self, canvas):
+        w = canvas.get_width()
+        h = canvas.get_height()
+
+        canvas.blit(self.nine_slice.render(w, h), (0, 0))
+
+
+class NineSlice:
+    def __init__(self, source_surface, border_thickness):
+        self.source = source_surface
+        self.t = border_thickness
+        self.w, self.h = self.source.get_size()
+
+        self.top_left = self.source.subsurface(0, 0, self.t, self.t).copy()
+        self.top_right = self.source.subsurface(self.w - self.t, 0, self.t, self.t).copy()
+        self.bottom_left = self.source.subsurface(0, self.h - self.t, self.t, self.t).copy()
+        self.bottom_right = self.source.subsurface(self.w - self.t, self.h - self.t, self.t, self.t).copy()
+
+        self.top_edge = self.source.subsurface(self.t, 0, self.w - 2*self.t, self.t).copy()
+        self.bottom_edge = self.source.subsurface(self.t, self.h - self.t, self.w - 2*self.t, self.t).copy()
+        self.right_edge = self.source.subsurface(self.w - self.t, self.t, self.t, self.h - 2*self.t).copy()
+        self.left_edge = self.source.subsurface(0, self.t, self.t, self.h - 2*self.t).copy()
+
+        self.center = self.source.subsurface(self.t, self.t, self.w-  2*self.t, self.h - 2*self.t).copy()
+
+    def render(self, target_w, target_h):
+        surface = pygame.Surface((target_w, target_h), pygame.SRCALPHA)
+
+        surface.blit(self.top_left, (0, 0))
+        surface.blit(self.top_right, (target_w - self.t, 0))
+        surface.blit(self.bottom_left, (0, target_h - self.t))
+        surface.blit(self.bottom_right, (target_w - self.t, target_h - self.t))
+
+        top_scaled = pygame.transform.scale(self.top_edge, (target_w - 2*self.t, self.t))
+        bottom_scaled = pygame.transform.scale(self.bottom_edge, (target_w - 2*self.t, self.t))
+        left_scaled = pygame.transform.scale(self.left_edge, (self.t,  target_h - 2*self.t))
+        right_scaled = pygame.transform.scale(self.left_edge, (self.t,  target_h - 2*self.t))
+
+        surface.blit(top_scaled, (self.t, 0))
+        surface.blit(bottom_scaled, (self.t, target_h - self.t))
+        surface.blit(left_scaled, (0, self.t))
+        surface.blit(right_scaled, (target_w - self.t, self.t))
+
+        center_scaled = pygame.transform.scale(self.center, (target_w - 2*self.t, target_h - 2*self.t))
+        surface.blit(center_scaled, (self.t, self.t))
+
+        return surface
+
+
+def validate_draw(object):
+    return hasattr(object, "draw")

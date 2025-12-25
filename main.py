@@ -1,5 +1,3 @@
-from setuptools import namespaces
-
 from config import ingredients_data, resolution_profiles, flavors_data, icons_data, buttons_data, CONSTANTS
 from classes import *
 from types import SimpleNamespace
@@ -14,6 +12,7 @@ pygame.init()
 class Coordinator:
     def __init__(self):
         #Classes
+        self.background = None
         self.sprite_manager = None
         self.state_manager = None
         self.event_manager = None
@@ -47,13 +46,14 @@ class Coordinator:
         self.event_manager = EventManager(self)
         self.state_manager = StateManager(self)
         self.ui_manager = UiManager(self)
+        self.background = Background(self)
 
     def initialize_classes(self):
-
         self.initialize_ingredients()
         self.initialize_flavors()
         self.ui_manager.initialize()
         self.grid.initialize()
+        self.background.initialize()
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():
@@ -69,7 +69,7 @@ class Coordinator:
 
     def initialize_self(self):
         self.running = True
-        self.draw_manager.draw_registry(True)
+        self.draw_manager.draw_registry()
 
     def main_loop(self):
         while self.running:
@@ -84,6 +84,7 @@ class Coordinator:
                 self.event_manager.update(event)
 
             self.ui_manager.update_screen()
+            self.sprite_manager.update()
             self.draw_manager.draw_registry()
             self.ui_manager.draw_canvas()
             #self.blit_flavors()
