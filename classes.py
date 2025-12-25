@@ -311,12 +311,12 @@ class EventManager:
             if self.dragged_sprite:
                 self.dragged_sprite = None
         elif event.type == pygame.FINGERDOWN:
-            touch_x = event.x * self.coordinator.screen.w
-            touch_y = event.y * self.coordinator.screen.h
+            touch_x = event.x * self.coordinator.ui_manager.pygame.screen.w
+            touch_y = event.y * self.coordinator.ui_manager.pygame.screen.h
             self.check_image_clicked(touch_x, touch_y)
         elif event.type == pygame.FINGERMOTION:
-            touch_x = event.x * self.coordinator.screen.w
-            touch_y = event.y * self.coordinator.screen.h
+            touch_x = event.x * self.coordinator.ui_manager.pygame.screen.w
+            touch_y = event.y * self.coordinator.ui_manager.pygame.screen.h
             self.move_sprite(touch_x, touch_y)
         elif event.type == pygame.FINGERUP:
             if self.dragged_sprite:
