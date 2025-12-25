@@ -1,4 +1,6 @@
-from config import ingredients_data, flavors_data, resolution_profiles, icons, buttons, CONSTANTS
+from setuptools import namespaces
+
+from config import ingredients_data, resolution_profiles, flavors_data, icons_data, buttons_data, CONSTANTS
 from classes import Ingredient, Flavor, PrepSheet, Grid, DrawManager, Sprite, AnimationManager
 from types import SimpleNamespace
 import pygame
@@ -16,8 +18,11 @@ class Coordinator:
         self.draw_manager = None
         self.grid = None
         self.prep_sheet = None
+        #Lists
         self.ingredients = []
         self.flavors = []
+        self.buttons = []
+        self.icons = []
         #Numbers
         self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
         self.base_resolution = SimpleNamespace(w=0, h=0)
@@ -27,9 +32,8 @@ class Coordinator:
         self.pygame = SimpleNamespace(canvas=None, screen=None, clock=None, fps=None, flip=pygame.display.flip, display_info=None)
         #Images
         self.bg = SimpleNamespace(name="", surface=None)
-        self.buttons = buttons
-        self.menu_icons = icons
-        #self.flavor_icons = flavor_icons
+        #Data
+        self.data = SimpleNamespace(buttons=buttons_data, ingredients=ingredients_data, flavors=flavors_data, menu_icons=icons_data)
         #Resolution
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
@@ -62,21 +66,21 @@ class Coordinator:
             self.ingredients.append(ingredient)
 
     def initialize_flavors(self):
-        for flavor in flavors_data.values():
-            flavor = Flavor(self, flavor, ingredients_data)
+        for attr_value in vars(self.data.flavors).values():
+            flavor = Flavor(self, attr_value, self.ingredients)
             flavor.initialize()
             flavor.load_sprite(Sprite)
             self.flavors.append(flavor)
 
     def load_sprites(self):
-        self.load_namespace_sprites(self.buttons)
-        self.load_namespace_sprites(self.menu_icons)
+        self.load_namespace_sprites(self.data.buttons, "button", )
+        self.load_namespace_sprites(self.data.menu_icons, "icon")
 
-    def load_namespace_sprites(self, namespace):
+    def load_namespace_sprites(self, namespace, img_tag=None):
         for attr_value in vars(namespace).values():
-            _state_tag = getattr(attr_value, "state_tag", None)
             sprite = Sprite(self, attr_value.name, attr_value.image_name)
-            sprite.initialize(_state_tag)
+            sprite.state_tag = getattr(attr_value, "state_tag", None)
+            sprite.initialize(img_tag)
             attr_value.surface = sprite.surface
 
     def initialize_self(self):
@@ -101,27 +105,24 @@ class Coordinator:
         self.set_resolution_data()
 
     def retrieve_resolution_data(self):
-        for name, profile in self.resolution_profiles.items():
-            if self.screen.short <= profile["max_short"]:
-                self.active_profile =  profile
+        for attr_value in vars(self.resolution_profiles).values():
+            if self.screen.short <= attr_value.max_short:
+                self.active_profile = attr_value
                 break
 
     def set_resolution_data(self):
-        self.base_resolution.w = self.active_profile["base_width"]
-        self.base_resolution.h = self.active_profile["base_height"]
-        self.scale.font = self.active_profile["font_size"]
+        self.base_resolution.w = self.active_profile.base_width
+        self.base_resolution.h = self.active_profile.base_height
+        self.scale.font = self.active_profile.font_size
         self.scale.x = self.screen.w / self.base_resolution.w
         self.scale.y = self.screen.h / self.base_resolution.h
-        self.scale.multiplier = self.active_profile["scale_multiplier"]
+        self.scale.multiplier = self.active_profile.scale_multiplier
         self.scale.image = min(self.scale.x, self.scale.y) * self.scale.multiplier
-        self.scale.font = self.active_profile["font_size"] * self.scale.image
+        self.scale.font = self.active_profile.font_size * self.scale.image
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
         self.bg.surface = pygame.transform.scale(self.bg.surface, self.screen.dimensions)
-
-    def set_scaled_w_h(self, w, h):
-        return w * self.scale.image, h * self.scale.image
 
     def blit_flavors(self):
         for i, flavor in enumerate(self.flavors):
@@ -206,8 +207,15 @@ class Coordinator:
                 _true = True
                 #print("production")
             for sprite in self.draw_manager.registry:
-                if self.state in sprite.name:
-                    self.animation_manager.lerp_alpha(sprite, 0)
+                if sprite.img_tag != "button" and self.state in sprite.name and sprite.name != "icon_quick":
+                    print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
+                    sprite.home_x = sprite.x
+                    sprite.home_y = sprite.y
+                    scale = 1.75
+                    center_x = self.screen.w // 2 - int(sprite.origin_w * scale) // 2
+                    center_y = self.screen.h // 2 - int(sprite.origin_h * scale) // 2
+                    self.animation_manager.lerp_scale(sprite, scale)
+                    self.animation_manager.lerp_move(sprite, center_x, center_y)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False

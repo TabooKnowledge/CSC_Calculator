@@ -28,141 +28,50 @@ ingredients_data = {
 }
 
 
-flavors_data = {
-    "ck": {
-        "tag": "flavor_dict",
-        "name": "Cranberry Kelli",
-        "large_quick_par": 6,
-        "small_quick_par": 6,
-        "line_mix_par": 16,
-        "ingredients_names": ["Cranberries", "Almonds"],
-        "image_name": "cranberry_kelli.png",
-    },
-    "fn": {
-        "tag": "flavor_dict",
-        "name": "Fancy Nancy",
-        "large_quick_par": 13,
-        "small_quick_par": 9,
-        "line_mix_par": 28,
-        "ingredients_names": ["Apples", "Pecans", "Grapes"],
-        "image_name": "fancy_nancy.png",
-    },
-    "llb": {
-        "tag": "flavor_dict",
-        "name": "Lauryn's Lemon Basil",
-        "large_quick_par": 3,
-        "small_quick_par": 3,
-        "line_mix_par": 12,
-        "ingredients_names": ["Lauryns Mix"],
-        "image_name": "lauryns_lemon_basil.png",
-    },
-    "ff": {
-        "tag": "flavor_dict",
-        "name": "Fruity Fran",
-        "large_quick_par": 4,
-        "small_quick_par": 4,
-        "line_mix_par": 12,
-        "ingredients_names": ["Pineapples", "Pecans", "Grapes"],
-        "image_name": "fruity_fran.png",
-    },
-    "cc": {
-        "tag": "flavor_dict",
-        "name": "Classic Carol",
-        "large_quick_par": 13,
-        "small_quick_par": 9,
-        "line_mix_par": 24,
-        "ingredients_names": ["Classic"],
-        "image_name": "classic_carol.png",
-    },
-    "ss": {
-        "tag": "flavor_dict",
-        "name": "Sassy Scotty",
-        "large_quick_par": 4,
-        "small_quick_par": 4,
-        "line_mix_par": 16,
-        "ingredients_names": ["Bacon", "Cheese", "Ranch"],
-        "image_name": "sassy_scotty.png",
-    },
-    "oos": {
-        "tag": "flavor_dict",
-        "name": "Olivia's Old South",
-        "large_quick_par": 4,
-        "small_quick_par": 4,
-        "line_mix_par": 12,
-        "ingredients_names": ["Sweet Relish", "Eggs"],
-        "image_name": "olivias_old_south.png",
-    },
-    "jh": {
-        "tag": "flavor_dict",
-        "name": "Jalapeno Holly",
-        "large_quick_par": 4,
-        "small_quick_par": 4,
-        "line_mix_par": 12,
-        "ingredients_names": ["Jalapenos"],
-        "image_name": "jalapeno_holly.png",
-    },
-    "bb": {
-        "tag": "flavor_dict",
-        "name": "Buffalo Barclay",
-        "large_quick_par": 3,
-        "small_quick_par": 3,
-        "line_mix_par": 16,
-        "ingredients_names": ["Buffalo"],
-        "image_name": "buffalo_barclay.png",
-
-    },
-    "bbq": {
-        "tag": "flavor_dict",
-        "name": "Barbecue",
-        "large_quick_par": 2,
-        "small_quick_par": 2,
-        "line_mix_par": 8,
-        "ingredients_names": ["Barbecue"],
-        "image_name": "barbecue.png",
-    },
-    "dc": {
-        "tag": "flavor_dict",
-        "name": "Dixie Chick",
-        "large_quick_par": 3,
-        "small_quick_par": 3,
-        "line_mix_par": 12,
-        "ingredients_names": ["Onions"],
-        "image_name": "dixie_chick.png",
-    },
-    "kkl": {
-        "tag": "flavor_dict",
-        "name": "Kickin' Kay Lynne",
-        "large_quick_par": 4,
-        "small_quick_par": 4,
-        "line_mix_par": 12,
-        "ingredients_names": ["Kickin"],
-        "image_name": "kickin_kay_lynne.png",
-    },
-}
-
-
-resolution_profiles = {
-    "small":  {"max_short": 600,          "base_width":  360, "base_height": 640, "scale_multiplier": .8, "font_size": 8},
-    "medium": {"max_short": 800,          "base_width":  768, "base_height": 640, "scale_multiplier": .7, "font_size": 12},
-    "large":  {"max_short": float('inf'), "base_width": 1920, "base_height": 640, "scale_multiplier": .8, "font_size": 16},
-}
-
-
-icons =  SimpleNamespace(
-            reach_in=SimpleNamespace(name="icon_reach_in",image_name="icon_reach_in.png", surface=None),
-            walk_in=SimpleNamespace(name="icon_walk_in", image_name="icon_walk_in.png", surface=None),
-            quick=SimpleNamespace(name="icon_quick", image_name="icon_quick.png", surface=None),
+resolution_profiles = SimpleNamespace(
+    small=SimpleNamespace(max_short=600, base_width=360, base_height=640, scale_multiplier=.8, font_size=8),
+    medium=SimpleNamespace(max_short=800, base_width=768, base_height=1024, scale_multiplier=.7, font_size=12),
+    large=SimpleNamespace(max_short=1000, base_width=1920, base_height=1080, scale_multiplier=.8, font_size=16)
 )
 
 
-buttons = SimpleNamespace(
-            b_production=SimpleNamespace(name="button_production", image_name="button_production_idle.png", surface=None, state_tag="production"),
-            b_reach_in=SimpleNamespace(name="button_reach_in", image_name="button_reach_in_idle.png", surface=None, state_tag="reach_in"),
-            b_walk_in=SimpleNamespace(name="button_walk_in", image_name="button_walk_in_idle.png", surface=None, state_tag="walk_in"),
-            b_quick=SimpleNamespace(name="button_quick", image_name="button_quick_idle.png", surface=None, state_tag="quick"),
+flavors_data = SimpleNamespace(
+    cranberry_kelli=SimpleNamespace(
+        name="Cranberry Kelli", ingredients=["Almonds", "Cranberries"], img_name="cranberry_kelli.png"),
+    fancy_nancy=SimpleNamespace(
+        name="Fancy Nancy", ingredients=["Apples", "Pecans", "Grapes"], img_name="fancy_nancy.png"),
+    frutiy_fran=SimpleNamespace(
+        name="Fruity Fran", ingredients=["Pineapples", "Pecans", "Grapes"], img_name="fruity_fran.png"),
+    lauryns=SimpleNamespace(
+        name="Lauryn's Lemon Basil", ingredients=["Apples", "Pecans", "Grapes"], img_name="lauryns_lemon_basil.png"),
+    classic_carol=SimpleNamespace(
+        name="Classic Carol", ingredients=["Classic"], img_name="classic_carol.png"),
+    sassy_scotty=SimpleNamespace(
+        name="Sassy Scotty", ingredients=["Bacon", "Cheese", "Ranch"], img_name="sassy_scotty.png"),
+    olivas_old_south=SimpleNamespace(
+        name="Olivia's Old South", ingredients=["Sweet Relish", "Eggs"], img_name="olivias_old_south.png"),
+    jalapeno_holly=SimpleNamespace(
+        name="Jalapeno Holly", ingredients=["Jalapenos"], img_name="jalapeno_holly.png"),
+    buffalo_barclay=SimpleNamespace(
+        name="Buffalo Barclay", ingredients=["Buffalo"], img_name="buffalo_barclay.png"),
+    barbecue=SimpleNamespace(
+        name="Barbecue", ingredients=["Barbecue"], img_name="barbecue.png"),
+    dixie_chick=SimpleNamespace(
+        name="Dixie Chick", ingredients=["Onions"], img_name="dixie_chick.png"),
+    kickin_kay_lynne=SimpleNamespace(name="Kickin' Kay Lynne", ingredients=["Kickin"], img_name="kickin_kay_lynne.png"),
 )
 
 
-states = SimpleNamespace(reach_in=SimpleNamespace(scale=2,
-                                                  )
+icons_data =  SimpleNamespace(
+            reach_in=SimpleNamespace(name="icon_reach_in",image_name="icon_reach_in.png"),
+            walk_in=SimpleNamespace(name="icon_walk_in", image_name="icon_walk_in.png"),
+            quick=SimpleNamespace(name="icon_quick", image_name="icon_quick.png"),
+)
+
+
+buttons_data = SimpleNamespace(
+            b_production=SimpleNamespace(name="button_production", image_name="button_production_idle.png", state_tag="production"),
+            b_reach_in=SimpleNamespace(name="button_reach_in", image_name="button_reach_in_idle.png", state_tag="reach_in"),
+            b_walk_in=SimpleNamespace(name="button_walk_in", image_name="button_walk_in_idle.png", state_tag="walk_in"),
+            b_quick=SimpleNamespace(name="button_quick", image_name="button_quick_idle.png", state_tag="quick"),
 )
