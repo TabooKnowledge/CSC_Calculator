@@ -343,8 +343,8 @@ class EventManager:
     def check_image_clicked(self, x, y):
         for sprite in self.clickable_sprites:
             if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
-                if hasattr(sprite, "img_tag"):
-                    self.check_button_click(sprite)
+                #if hasattr(sprite, "img_tag"):
+                    #self.check_button_click(sprite)
                 if sprite.state_tag is not None:
                     self.coordinator.state_manager.state = sprite.state_tag
                 self.dragged_sprite = sprite
@@ -375,17 +375,22 @@ class EventManager:
 
 class UiManager:
     def __init__(self, coordinator):
+        self.short_axis = None
+        self.num_cells = 3
+        self.cell_size = None
         self.coordinator = coordinator
         self.flavors = []
         self.buttons = []
         self.icons = []
         self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
         self.base_resolution = SimpleNamespace(w=0, h=0)
-        self.screen = SimpleNamespace(w=0, h=0, short=None, dimensions=None)
+        self.screen = SimpleNamespace(w=0, h=0, short=None, dimensions=None, short_axis=None)
         self.resolution_profiles = None
         self.bg = None
         self.buttons = buttons_data
         self.icons = icons_data
+        self.icons_list = []
+        self.buttons_list = []
         self.dithered_bg = None
         self.bg = SimpleNamespace(name="", surface=None)
         self.resolution_profiles = resolution_profiles
@@ -405,8 +410,11 @@ class UiManager:
         pygame.display.set_caption("Chicken Salad Production Software")
         self.bg.name = "rainbow_bg.jpg"
         self.adjust_resolution()
-        self.load_sprites()
+        self.populate_icon_list()
+        self.populate_button_list()
+        #self.load_sprites()
         self.scale_sprites()
+        self.layout_icons()
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
@@ -431,10 +439,23 @@ class UiManager:
         self.scale.multiplier = self.active_profile.scale_multiplier
         self.scale.image = min(self.scale.x, self.scale.y) * self.scale.multiplier
         self.scale.font = self.active_profile.font_size * self.scale.image
+        self.screen.short_axis = "width" if self.screen.w < self.screen.h else "height"
 
-    def load_sprites(self):
-        self.coordinator.sprite_manager.load_namespace_sprites(self.buttons, "button")
-        self.coordinator.sprite_manager.load_namespace_sprites(self.icons, "icon")
+    def populate_icon_list(self):
+        ordered_keys = ["reach_in", "quick", "walk_in"]
+        for key in ordered_keys:
+            data = getattr(self.icons, key)
+            icon = Sprite(self.coordinator, data.name, data.image_name)
+            icon.initialize("icon")
+            self.icons_list.append(icon)
+
+    def populate_button_list(self):
+        ordered_keys = ["reach_in", "quick", "walk_in"]
+        for key in ordered_keys:
+            data = getattr(self.buttons, key)
+            button = Sprite(self.coordinator, data.name, data.image_name)
+            button.initialize("button")
+            self.icons_list.append(button)
 
     def scale_sprites(self, registry=None):
         registry = registry if registry is not None else self.coordinator.draw_manager.registry
@@ -448,6 +469,25 @@ class UiManager:
                 sprite.origin_h = h
                 sprite.scale(w, h)
 
+    def update_screen(self):
+        self.pygame.screen.fill((0, 0, 0))
+
+    def draw_canvas(self):
+        self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
+        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+
+    def layout_icons(self):
+        if self.screen.short_axis == "height":
+            cell_size = self.coordinator.ui_manager.screen.w // self.num_cells
+            for i, icon in enumerate(self.icons_list):
+                icon.x = i * cell_size + cell_size // 2 - icon.w // 2
+                icon.y = self.coordinator.ui_manager.screen.h // 2 - icon.h
+        else:
+            cell_size = self.coordinator.ui_manager.screen.h // self.num_cells
+            for i, icon in enumerate(self.icons_list):
+                icon.x = self.coordinator.ui_manager.screen.w // 2 - icon.w // 2
+                icon.y = i * cell_size + cell_size // 2 - icon.h // 2
+
     def blit_flavors(self):
         for i, flavor in enumerate(self.flavors):
             row = i // self.coordinator.grid.cols
@@ -456,15 +496,6 @@ class UiManager:
             flavor.x += self.coordinator.grid.cell_width // 2 - flavor.image.get_width() // 2
             flavor.y += self.coordinator.grid.cell_height // 2 - flavor.image.get_height() // 2
             self.screen.blit(flavor.image, (flavor.x, flavor.y))
-
-
-    def update_screen(self):
-        self.pygame.screen.fill((0, 0, 0))
-
-    def draw_canvas(self):
-        self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
-        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
-
 
     def draw_grid(self):
         cols = self.screen.w // 30
