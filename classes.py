@@ -169,7 +169,7 @@ class DrawManager:
                 sprite.draw(self.canvas)
 
     def update_canvas(self):
-        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0))
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0, 0))
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
 
 
@@ -456,7 +456,8 @@ class UiManager:
 
     def draw_canvas(self):
         self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
-        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
+        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+
 
     def draw_grid(self):
         cols = self.screen.w // 30
@@ -528,13 +529,7 @@ class Background:
         w = self.coordinator.ui_manager.screen.w
         h = self.coordinator.ui_manager.screen.h
         self.nine_slice_bg = NineSlice(self.border_image, self.border_thickness).render(w, h)
-        self.coordinator.draw_manager.subscribe_object(self)
-
-    def draw(self, canvas):
-        w = canvas.get_width()
-        h = canvas.get_height()
-
-        canvas.blit(self.nine_slice_bg, (0, 0))
+        self.coordinator.ui_manager.pygame.static_canvas.blit(self.nine_slice_bg, (0, 0))
 
 
 class NineSlice:
@@ -566,7 +561,7 @@ class NineSlice:
         top_scaled = pygame.transform.scale(self.top_edge, (target_w - 2*self.t, self.t))
         bottom_scaled = pygame.transform.scale(self.bottom_edge, (target_w - 2*self.t, self.t))
         left_scaled = pygame.transform.scale(self.left_edge, (self.t,  target_h - 2*self.t))
-        right_scaled = pygame.transform.scale(self.left_edge, (self.t,  target_h - 2*self.t))
+        right_scaled = pygame.transform.scale(self.right_edge, (self.t,  target_h - 2*self.t))
 
         surface.blit(top_scaled, (self.t, 0))
         surface.blit(bottom_scaled, (self.t, target_h - self.t))
