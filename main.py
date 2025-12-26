@@ -73,7 +73,7 @@ class Coordinator:
     def main_loop(self):
         while self.running:
             self.state_manager.update()
-            self.event_manager.check_button_click()
+            #self.event_manager.check_button_click()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False

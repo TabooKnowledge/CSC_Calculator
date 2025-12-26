@@ -233,7 +233,7 @@ class Sprite:
         print(f"{self.name} updated")
 
     def draw(self, canvas):
-        if self.img_tag is not "flavor":
+        if self.img_tag != "flavor":
             canvas.blit(self.surface, (self.x, self.y))
 
     def scale(self, w, h):
@@ -344,7 +344,7 @@ class EventManager:
         for sprite in self.clickable_sprites:
             if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
                 if hasattr(sprite, "img_tag"):
-                    self.check_button_click()
+                    self.check_button_click(sprite)
                 if sprite.state_tag is not None:
                     self.coordinator.state_manager.state = sprite.state_tag
                 self.dragged_sprite = sprite
@@ -354,18 +354,23 @@ class EventManager:
             self.dragged_sprite.x = x - self.dragged_sprite.w // 2
             self.dragged_sprite.y = y - self.dragged_sprite.h // 2
 
-    def check_button_click(self):
-        for sprite in self.clickable_sprites:
-            if hasattr(sprite, "img_tag"):
-                if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name:
-                    print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
-                    sprite.home_x = sprite.x
-                    sprite.home_y = sprite.y
-                    scale = 2.125
-                    center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
-                    center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
-                    self.coordinator.animation_manager.lerp_scale(sprite, scale)
-                    self.coordinator.animation_manager.lerp_move(sprite, center_x, center_y)
+    def check_button_click(self, sprite):
+        if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name:
+            print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
+            sprite.home_x = sprite.x
+            sprite.home_y = sprite.y
+            scale = 2.125
+            #center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
+            #center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
+            center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
+            center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
+            sprite.x = center_x
+            sprite.y = center_y
+            sprite.w = sprite.origin_w * scale
+            sprite.h = sprite.origin_h * scale
+            sprite.surface = pygame.transform.scale(sprite.surface, (int(sprite.w), int(sprite.h)))
+            #self.coordinator.animation_manager.lerp_scale(sprite, scale)
+            #self.coordinator.animation_manager.lerp_move(sprite, center_x, center_y)
 
 
 class UiManager:
