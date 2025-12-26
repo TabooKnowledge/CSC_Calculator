@@ -32,6 +32,7 @@ class Coordinator:
         #Pygame
         self.clock = pygame.time.Clock()
         self.fps = 60
+        self.delta = None
 
     def initialize(self):
         self.create_classes()
@@ -87,7 +88,10 @@ class Coordinator:
             self.ui_manager.draw_canvas()
             #self.draw_grid()
             pygame.display.flip()
+            fps = self.clock.get_fps()
+            print(f"FPS: {fps}")
             self.clock.tick(self.fps)
+            self.delta = self.clock.tick(self.fps) / 1000
 
 
 

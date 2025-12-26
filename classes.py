@@ -234,7 +234,8 @@ class Sprite:
         print(f"{self.name} updated")
 
     def draw(self, canvas):
-        canvas.blit(self.surface, (self.x, self.y))
+        if self.img_tag is not "flavor":
+            canvas.blit(self.surface, (self.x, self.y))
 
     def scale(self, w, h):
         self.w = w
@@ -250,6 +251,7 @@ class AnimationManager:
 
     def lerp_move(self, sprite, target_x, target_y):
         lerp_speed = self.lerp_speed.move
+
         total_dx = target_x - sprite.origin_x
         total_dy = target_y - sprite.origin_y
 
@@ -263,12 +265,10 @@ class AnimationManager:
             sprite.x = target_x
             sprite.y = target_y
             return
-        else:
-            lerp_speed = self.lerp_speed.move
-            if remaining_distance < .1 * total_distance:
-                lerp_speed *= 1.5
-            elif remaining_distance < .5 * total_distance:
-                lerp_speed *= 1.25
+        if remaining_distance < .1 * total_distance:
+            lerp_speed *= 1.5
+        elif remaining_distance < .5 * total_distance:
+            lerp_speed *= 1.25
 
         sprite.x += dx * lerp_speed
         sprite.y += dy * lerp_speed
@@ -344,6 +344,8 @@ class EventManager:
     def check_image_clicked(self, x, y):
         for sprite in self.clickable_sprites:
             if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
+                if hasattr(sprite, "img_tag"):
+                    self.check_button_click()
                 if sprite.state_tag is not None:
                     self.coordinator.state_manager.state = sprite.state_tag
                 self.dragged_sprite = sprite
@@ -360,7 +362,7 @@ class EventManager:
                     print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
                     sprite.home_x = sprite.x
                     sprite.home_y = sprite.y
-                    scale = 1.75
+                    scale = 2.125
                     center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
                     center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
                     self.coordinator.animation_manager.lerp_scale(sprite, scale)
@@ -380,6 +382,7 @@ class UiManager:
         self.bg = None
         self.buttons = buttons_data
         self.icons = icons_data
+        self.dithered_bg = None
         self.bg = SimpleNamespace(name="", surface=None)
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
@@ -394,10 +397,9 @@ class UiManager:
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions)
-        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions)
+        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions, pygame.SRCALPHA)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.bg.name = "rainbow_bg.jpg"
-        self.load_background()
         self.adjust_resolution()
         self.load_sprites()
         self.scale_sprites()
@@ -451,12 +453,13 @@ class UiManager:
             flavor.y += self.coordinator.grid.cell_height // 2 - flavor.image.get_height() // 2
             self.screen.blit(flavor.image, (flavor.x, flavor.y))
 
+
     def update_screen(self):
         self.pygame.screen.fill((0, 0, 0))
 
     def draw_canvas(self):
         self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
-        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
 
 
     def draw_grid(self):
