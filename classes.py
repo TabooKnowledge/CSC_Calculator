@@ -169,8 +169,9 @@ class DrawManager:
                 sprite.draw(self.canvas)
 
     def update_canvas(self):
-        self.canvas = self.coordinator.ui_manager.pygame.canvas
-        self.canvas.fill((0,0,0))
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0))
+        self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
+
 
     def subscribe_object(self, sprite):
         self.registry.append(sprite)
@@ -382,7 +383,7 @@ class UiManager:
         self.bg = SimpleNamespace(name="", surface=None)
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
-        self.pygame = SimpleNamespace(canvas=None, screen=None, display_info=None)
+        self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None)
         self.center = SimpleNamespace(x=0, y=0)
 
     def initialize(self):
@@ -392,7 +393,8 @@ class UiManager:
         self.screen.short = min(self.screen.w, self.screen.h)
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
-        self.pygame.canvas = pygame.Surface(self.screen.dimensions)
+        self.pygame.static_canvas = pygame.Surface(self.screen.dimensions)
+        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.bg.name = "rainbow_bg.jpg"
         self.load_background()
@@ -453,7 +455,8 @@ class UiManager:
         self.pygame.screen.fill((0, 0, 0))
 
     def draw_canvas(self):
-        self.pygame.screen.blit(self.pygame.canvas, (0, 0))
+        self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
+        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
 
     def draw_grid(self):
         cols = self.screen.w // 30
