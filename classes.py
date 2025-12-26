@@ -314,7 +314,6 @@ class EventManager:
         self.clickable_sprites = None
 
     def initialize(self):
-        # Cache a flat list of clickable sprites
         self.clickable_sprites = [s for s in self.coordinator.draw_manager.registry if hasattr(s, "name") and not isinstance(s, list)]
 
     def update(self, event):
@@ -354,7 +353,7 @@ class EventManager:
             self.dragged_sprite.y = y - self.dragged_sprite.h // 2
 
     def check_button_click(self):
-        for sprite in self.coordinator.draw_manager.registry:
+        for sprite in self.clickable_sprites:
             if hasattr(sprite, "img_tag"):
                 if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name:
                     print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
@@ -526,6 +525,7 @@ class Background:
         w = self.coordinator.ui_manager.screen.w
         h = self.coordinator.ui_manager.screen.h
         self.nine_slice_bg = NineSlice(self.border_image, self.border_thickness).render(w, h)
+        self.coordinator.draw_manager.subscribe_object(self)
 
     def draw(self, canvas):
         w = canvas.get_width()
@@ -550,7 +550,7 @@ class NineSlice:
         self.right_edge = self.source.subsurface(self.w - self.t, self.t, self.t, self.h - 2*self.t).copy()
         self.left_edge = self.source.subsurface(0, self.t, self.t, self.h - 2*self.t).copy()
 
-        self.center = self.source.subsurface(self.t, self.t, self.w-  2*self.t, self.h - 2*self.t).copy()
+        self.center = self.source.subsurface(self.t, self.t, self.w - 2*self.t, self.h - 2*self.t).copy()
 
     def render(self, target_w, target_h):
         surface = pygame.Surface((target_w, target_h), pygame.SRCALPHA)
