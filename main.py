@@ -91,7 +91,6 @@ class Coordinator:
             fps = self.clock.get_fps()
             print(f"FPS: {fps}")
             self.clock.tick(self.fps)
-            self.delta = self.clock.tick(self.fps) / 1000
 
 
 
