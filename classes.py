@@ -415,6 +415,7 @@ class UiManager:
         #self.load_sprites()
         self.scale_sprites()
         self.layout_icons()
+        self.layout_buttons()
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
@@ -455,7 +456,7 @@ class UiManager:
             data = getattr(self.buttons, key)
             button = Sprite(self.coordinator, data.name, data.image_name)
             button.initialize("button")
-            self.icons_list.append(button)
+            self.buttons_list.append(button)
 
     def scale_sprites(self, registry=None):
         registry = registry if registry is not None else self.coordinator.draw_manager.registry
@@ -478,15 +479,21 @@ class UiManager:
 
     def layout_icons(self):
         if self.screen.short_axis == "height":
+            print("Height is short")
             cell_size = self.coordinator.ui_manager.screen.w // self.num_cells
             for i, icon in enumerate(self.icons_list):
                 icon.x = i * cell_size + cell_size // 2 - icon.w // 2
                 icon.y = self.coordinator.ui_manager.screen.h // 2 - icon.h
         else:
-            cell_size = self.coordinator.ui_manager.screen.h // self.num_cells
+            cell_size = self.coordinator.ui_manager.screen.h * .7 // self.num_cells
             for i, icon in enumerate(self.icons_list):
                 icon.x = self.coordinator.ui_manager.screen.w // 2 - icon.w // 2
                 icon.y = i * cell_size + cell_size // 2 - icon.h // 2
+
+    def layout_buttons(self):
+        for i, button in enumerate(self.buttons_list):
+            button.x = self.icons_list[i].x
+            button.y = self.icons_list[i].y + self.icons_list[i].h - button.h // 2
 
     def blit_flavors(self):
         for i, flavor in enumerate(self.flavors):

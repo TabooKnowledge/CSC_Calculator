@@ -63,15 +63,15 @@ flavors_data = SimpleNamespace(
 
 
 icons_data =  SimpleNamespace(
-            reach_in=SimpleNamespace(name="icon_reach_in",image_name="icon_reach_in.png"),
-            walk_in=SimpleNamespace(name="icon_quick", image_name="icon_quick.png"),
-            quick=SimpleNamespace(name="icon_walk_in", image_name="icon_walk_in.png"),
+            reach_in=SimpleNamespace(name="reach_in",image_name="icon_reach_in.png"),
+            walk_in=SimpleNamespace(name="quick", image_name="icon_quick.png"),
+            quick=SimpleNamespace(name="walk_in", image_name="icon_walk_in.png"),
 )
 
 
 buttons_data = SimpleNamespace(
-            production=SimpleNamespace(name="button_production", image_name="button_production_idle.png", state_tag="production"),
-            reach_in=SimpleNamespace(name="button_reach_in", image_name="button_reach_in_idle.png", state_tag="reach_in"),
-            walk_in=SimpleNamespace(name="button_walk_in", image_name="button_walk_in_idle.png", state_tag="walk_in"),
-            quick=SimpleNamespace(name="button_quick", image_name="button_quick_idle.png", state_tag="quick"),
+            production=SimpleNamespace(name="production", image_name="button_production_idle.png", state_tag="production"),
+            reach_in=SimpleNamespace(name="reach_in", image_name="button_reach_in_idle.png", state_tag="reach_in"),
+            walk_in=SimpleNamespace(name="walk_in", image_name="button_walk_in_idle.png", state_tag="walk_in"),
+            quick=SimpleNamespace(name="quick", image_name="button_quick_idle.png", state_tag="quick"),
 )
