@@ -53,7 +53,6 @@ class Coordinator:
         self.initialize_ingredients()
         self.ui_manager.initialize()
         self.background.initialize()
-        self.event_manager.initialize()
 
     def initialize_ingredients(self):
         for name, weight in ingredients_data.items():

@@ -386,36 +386,47 @@ class EventManager:
                 self.dragged_sprite = None
 
     def check_icon_clicked(self, x, y):
-        for sprite in self.coordinator.draw_manager.registry:
-            if not isinstance(sprite, Sprite):
-                continue
-            if sprite.img_tag != "icon":
-                continue
-
+        clicked_sprite = False
+        icons = [
+            s for s in self.coordinator.draw_manager.registry
+            if isinstance(s, Sprite) and s.img_tag == "icon"
+        ]
+        for sprite in icons:
             if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
-                if hasattr(sprite, "img_tag"):
-                    self.check_button_click(sprite)
-                if sprite.state_tag is not None:
-                    self.coordinator.state_manager.state = sprite.state_tag
+                self.set_focused_sprite(sprite)
+                clicked_sprite = sprite
+                break
                 #self.dragged_sprite = sprite
+        if clicked_sprite:
+            self.set_focused_sprite(clicked_sprite)
+            if clicked_sprite.state_tag is not None:
+                self.coordinator.state_manager.state = clicked_sprite.state_tag
+        else:
+            self.unfocus_current()
+
+    def set_focused_sprite(self, sprite):
+        if self.sprite_transitioning:
+            return
+        if self.focused_sprite and self.focused_sprite is not sprite:
+            self.focused_sprite.focused = False
+            self.focused_sprite.moving_home = True
+            self.focused_sprite.depth = self.focused_sprite.origin_depth
+        self.focused_sprite = sprite
+        sprite.focused = True
+        sprite.moving_home = False
+        sprite.depth = CONSTANTS.FRONT_DEPTH
+
+    def unfocus_current(self):
+        if not self.focused_sprite:
+            return
+        self.focused_sprite.focused = False
+        self.focused_sprite.moving_home = True
+        self.focused_sprite.depth = self.focused_sprite.origin_depth
 
     def move_sprite(self, x, y):
         if self.dragged_sprite:
             self.dragged_sprite.x = x - self.dragged_sprite.w // 2
             self.dragged_sprite.y = y - self.dragged_sprite.h // 2
-
-    def check_button_click(self, sprite):
-        if self.sprite_transitioning:
-            return
-        if self.focused_sprite:
-            self.focused_sprite.focused = False
-            self.focused_sprite.moving_home = True
-            self.focused_sprite.depth = sprite.origin_depth
-
-        self.focused_sprite = sprite
-        sprite.focused = True
-        sprite.moving_home = False
-        sprite.depth = CONSTANTS.FRONT_DEPTH
 
 
 class UiManager:
@@ -617,23 +628,23 @@ class StateManager:
             # print("production")
 
     def state_main(self):
-        self.pygame.screen.blit(self.bg.surface,(0,0))
+        c = True
 
 
     def state_walk_in(self):
-        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+        c = True
 
 
     def state_reach_in(self):
-        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+        c = True
 
 
     def state_quick(self):
-        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+        c = True
 
 
     def state_production(self):
-        self.pygame.screen.blit(self.buttons.reach_in.surface, (0, 0))
+        c = True
 
 
 class Background:
@@ -737,6 +748,10 @@ class Icon:
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
                 self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
+            else:
+                sprite.alpha = 0
+                sprite.surface.set_alpha(sprite.alpha)
+
 
 
 
