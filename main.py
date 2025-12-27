@@ -89,7 +89,7 @@ class Coordinator:
             #self.draw_grid()
             pygame.display.flip()
             fps = self.clock.get_fps()
-            print(f"FPS: {fps}")
+            #print(f"FPS: {fps}")
             self.clock.tick(self.fps)
 
 

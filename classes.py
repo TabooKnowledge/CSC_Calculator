@@ -167,6 +167,7 @@ class DrawManager:
                 self.draw_registry(sprite)
             elif validate_draw(sprite):
                 sprite.draw(self.canvas)
+                sprite.update()
 
     def update_canvas(self):
         self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0))
@@ -200,6 +201,7 @@ class SpriteManager:
 
 class Sprite:
     def __init__(self, coordinator, name, img_name):
+        self.idle_focused = False
         self.coordinator = coordinator
         self.state_tag = None
         self.name = name
@@ -210,14 +212,15 @@ class Sprite:
         self.origin_x = 0
         self.origin_y = 0
         self.pos = SimpleNamespace(x=0, y=0, origin_x=0, origin_y=0, center_x=0, center_y=0)
-        self.at_home_pos = True
+        self.focused = False
         self.w = 0
         self.h = 0
         self.origin_w = 0
         self.origin_h = 0
-        self.at_home_scale = True
         self.surface = None
         self.origin_surface = None
+        self.at_home = True
+        self.moving_home = False
         alpha = 255
         render = True
 
@@ -230,7 +233,40 @@ class Sprite:
         self.coordinator.draw_manager.subscribe_object(self)
 
     def update(self):
-        print(f"{self.name} updated")
+        if self.focused and not self.moving_home:
+            self.center_self()
+        elif self.moving_home:
+            self.return_home()
+
+    def center_self(self):
+        if not self.idle_focused:
+            self.coordinator.event_manager.sprite_transitioning = True
+            print(f"{self.name} is focused and moving")
+            scale = self.coordinator.ui_manager.focused_scale
+            center_x = self.coordinator.ui_manager.screen.w // 2 - int(self.origin_w * scale) // 2
+            center_y = self.coordinator.ui_manager.screen.h // 2 - int(self.origin_h * scale) // 2
+            scale_done = self.coordinator.animation_manager.lerp_scale(self, scale)
+            move_done = self.coordinator.animation_manager.lerp_move(self, center_x, center_y)
+
+            if scale_done and move_done:
+                print(f"{self.name} is focused and not moving")
+                self.coordinator.event_manager.sprite_transitioning = False
+                self.idle_focused = True
+                self.at_home = False
+                self.moving_home = False
+
+    def return_home(self):
+        print(f"{self.name} is focused and returning home")
+        scale_done = self.coordinator.animation_manager.lerp_scale(self, 1)
+        print(f"{self.name} home scale done is {scale_done}")
+        move_done = self.coordinator.animation_manager.lerp_move(self, self.origin_x, self.origin_y)
+        print(f"{self.name} home move done is {move_done}")
+
+        if scale_done and move_done:
+            print(f"{self.name} is not focused and is home")
+            self.idle_focused = False
+            self.at_home = True
+            self.moving_home = False
 
     def draw(self, canvas):
         if self.img_tag != "flavor":
@@ -257,13 +293,14 @@ class AnimationManager:
         dx = target_x - sprite.x
         dy = target_y - sprite.y
         remaining_distance = (dx**2 + dy**2)**0.5
+        print(f"{sprite.name} remaining move distance is {remaining_distance}")
         total_distance = (total_dx ** 2 + total_dy ** 2) ** 0.5
-
-        if remaining_distance < .01 * total_distance:
-            print(f"{sprite.name} reached target.")
+        print(f"{sprite.name} total move distance is {total_distance}")
+        if remaining_distance < .5:
+            print(f"{sprite.name} reached target pos.")
             sprite.x = target_x
             sprite.y = target_y
-            return
+            return True
         if remaining_distance < .1 * total_distance:
             lerp_speed *= 1.5
         elif remaining_distance < .5 * total_distance:
@@ -271,6 +308,7 @@ class AnimationManager:
 
         sprite.x += dx * lerp_speed
         sprite.y += dy * lerp_speed
+        return False
 
     def lerp_scale(self, sprite, scale):
         lerp_speed = self.lerp_speed.scale
@@ -280,12 +318,15 @@ class AnimationManager:
         dw = target_w - sprite.w
         dh = target_h - sprite.h
         remaining_distance = (dw**2 + dh**2)**0.5
+        print(f"{sprite.name} remaining scale distance is {remaining_distance}")
         total_distance = ((target_w - sprite.origin_w)**2 + (target_h - sprite.origin_h)**2)**0.5
+        print(f"{sprite.name} total scale distance is {total_distance}")
 
-        if remaining_distance < .01 * total_distance:
+        if remaining_distance < .5:
             sprite.w = target_w
             sprite.h = target_h
-            return
+            print(f"{sprite.name} reached target scale.")
+            return True
         else:
             lerp_speed = self.lerp_speed.scale
             if remaining_distance < .1 * total_distance:
@@ -296,6 +337,7 @@ class AnimationManager:
         sprite.w += dw * lerp_speed
         sprite.h += dh * lerp_speed
         sprite.surface = pygame.transform.scale(sprite.origin_surface, (int(sprite.w), int(sprite.h)))
+        return False
 
     def lerp_alpha(self, sprite, target_a):
         current_alpha = sprite.surface.get_alpha()
@@ -312,6 +354,8 @@ class EventManager:
         self.coordinator = coordinator
         self.dragged_sprite = None
         self.clickable_sprites = None
+        self.focused_sprite = None
+        self.sprite_transitioning = False
 
     def initialize(self):
         self.clickable_sprites = [s for s in self.coordinator.draw_manager.registry if hasattr(s, "name") and not isinstance(s, list)]
@@ -322,7 +366,7 @@ class EventManager:
     def handle_sprite_movement(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = event.pos
-            self.check_image_clicked(mouse_x, mouse_y)
+            self.check_icon_clicked(mouse_x, mouse_y)
         elif event.type == pygame.MOUSEMOTION:
             self.move_sprite(*event.pos)
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -331,7 +375,7 @@ class EventManager:
         elif event.type == pygame.FINGERDOWN:
             touch_x = event.x * self.coordinator.ui_manager.screen.w
             touch_y = event.y * self.coordinator.ui_manager.screen.h
-            self.check_image_clicked(touch_x, touch_y)
+            self.check_icon_clicked(touch_x, touch_y)
         elif event.type == pygame.FINGERMOTION:
             touch_x = event.x * self.coordinator.ui_manager.screen.w
             touch_y = event.y * self.coordinator.ui_manager.screen.h
@@ -340,14 +384,14 @@ class EventManager:
             if self.dragged_sprite:
                 self.dragged_sprite = None
 
-    def check_image_clicked(self, x, y):
+    def check_icon_clicked(self, x, y):
         for sprite in self.clickable_sprites:
             if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
-                #if hasattr(sprite, "img_tag"):
-                    #self.check_button_click(sprite)
+                if hasattr(sprite, "img_tag"):
+                    self.check_button_click(sprite)
                 if sprite.state_tag is not None:
                     self.coordinator.state_manager.state = sprite.state_tag
-                self.dragged_sprite = sprite
+                #self.dragged_sprite = sprite
 
     def move_sprite(self, x, y):
         if self.dragged_sprite:
@@ -355,26 +399,21 @@ class EventManager:
             self.dragged_sprite.y = y - self.dragged_sprite.h // 2
 
     def check_button_click(self, sprite):
-        if sprite.img_tag != "button" and self.coordinator.state_manager.state in sprite.name:
-            print(f"Name: {sprite.name}, Image Tag: {sprite.img_tag}")
-            sprite.home_x = sprite.x
-            sprite.home_y = sprite.y
-            scale = 2.125
-            #center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
-            #center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
-            center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * scale) // 2
-            center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * scale) // 2
-            sprite.x = center_x
-            sprite.y = center_y
-            sprite.w = sprite.origin_w * scale
-            sprite.h = sprite.origin_h * scale
-            sprite.surface = pygame.transform.scale(sprite.surface, (int(sprite.w), int(sprite.h)))
-            #self.coordinator.animation_manager.lerp_scale(sprite, scale)
-            #self.coordinator.animation_manager.lerp_move(sprite, center_x, center_y)
+        if self.sprite_transitioning:
+            return
+        if self.focused_sprite:
+            self.focused_sprite.focused = False
+            self.focused_sprite.moving_home = True
+
+        self.focused_sprite = sprite
+        sprite.focused = True
+        sprite.moving_home = False
 
 
 class UiManager:
     def __init__(self, coordinator):
+        self.focused_sprite = None
+        self.focused_scale = 2.125
         self.short_axis = None
         self.num_cells = 3
         self.cell_size = None
@@ -484,16 +523,28 @@ class UiManager:
             for i, icon in enumerate(self.icons_list):
                 icon.x = i * cell_size + cell_size // 2 - icon.w // 2
                 icon.y = self.coordinator.ui_manager.screen.h // 2 - icon.h
+                icon.origin_x = icon.x
+                icon.origin_y = icon.y
+                icon.origin_w = icon.w
+                icon.origin_h = icon.h
         else:
             cell_size = self.coordinator.ui_manager.screen.h * .7 // self.num_cells
             for i, icon in enumerate(self.icons_list):
                 icon.x = self.coordinator.ui_manager.screen.w // 2 - icon.w // 2
                 icon.y = i * cell_size + cell_size // 2 - icon.h // 2
+                icon.origin_x = icon.x
+                icon.origin_y = icon.y
+                icon.origin_w = icon.w
+                icon.origin_h = icon.h
 
     def layout_buttons(self):
         for i, button in enumerate(self.buttons_list):
             button.x = self.icons_list[i].x
             button.y = self.icons_list[i].y + self.icons_list[i].h - button.h // 2
+            button.origin_x = button.x
+            button.origin_y = button.y
+            button.origin_w = button.w
+            button.origin_h = button.h
 
     def blit_flavors(self):
         for i, flavor in enumerate(self.flavors):

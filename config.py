@@ -64,8 +64,8 @@ flavors_data = SimpleNamespace(
 
 icons_data =  SimpleNamespace(
             reach_in=SimpleNamespace(name="reach_in",image_name="icon_reach_in.png"),
-            walk_in=SimpleNamespace(name="quick", image_name="icon_quick.png"),
-            quick=SimpleNamespace(name="walk_in", image_name="icon_walk_in.png"),
+            quick=SimpleNamespace(name="quick", image_name="icon_quick.png"),
+            walk_in=SimpleNamespace(name="walk_in", image_name="icon_walk_in.png"),
 )
 
 
@@ -75,3 +75,5 @@ buttons_data = SimpleNamespace(
             walk_in=SimpleNamespace(name="walk_in", image_name="button_walk_in_idle.png", state_tag="walk_in"),
             quick=SimpleNamespace(name="quick", image_name="button_quick_idle.png", state_tag="quick"),
 )
+
+
