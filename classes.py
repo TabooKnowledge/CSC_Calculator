@@ -241,7 +241,6 @@ class Sprite:
     def center_self(self):
         if not self.idle_focused:
             self.coordinator.event_manager.sprite_transitioning = True
-            print(f"{self.name} is focused and moving")
             scale = self.coordinator.ui_manager.focused_scale
             center_x = self.coordinator.ui_manager.screen.w // 2 - int(self.origin_w * scale) // 2
             center_y = self.coordinator.ui_manager.screen.h // 2 - int(self.origin_h * scale) // 2
@@ -249,21 +248,16 @@ class Sprite:
             move_done = self.coordinator.animation_manager.lerp_move(self, center_x, center_y)
 
             if scale_done and move_done:
-                print(f"{self.name} is focused and not moving")
                 self.coordinator.event_manager.sprite_transitioning = False
                 self.idle_focused = True
                 self.at_home = False
                 self.moving_home = False
 
     def return_home(self):
-        print(f"{self.name} is focused and returning home")
         scale_done = self.coordinator.animation_manager.lerp_scale(self, 1)
-        print(f"{self.name} home scale done is {scale_done}")
         move_done = self.coordinator.animation_manager.lerp_move(self, self.origin_x, self.origin_y)
-        print(f"{self.name} home move done is {move_done}")
 
         if scale_done and move_done:
-            print(f"{self.name} is not focused and is home")
             self.idle_focused = False
             self.at_home = True
             self.moving_home = False
@@ -293,11 +287,8 @@ class AnimationManager:
         dx = target_x - sprite.x
         dy = target_y - sprite.y
         remaining_distance = (dx**2 + dy**2)**0.5
-        print(f"{sprite.name} remaining move distance is {remaining_distance}")
         total_distance = (total_dx ** 2 + total_dy ** 2) ** 0.5
-        print(f"{sprite.name} total move distance is {total_distance}")
-        if remaining_distance < .5:
-            print(f"{sprite.name} reached target pos.")
+        if remaining_distance < 5:
             sprite.x = target_x
             sprite.y = target_y
             return True
@@ -317,15 +308,13 @@ class AnimationManager:
 
         dw = target_w - sprite.w
         dh = target_h - sprite.h
-        remaining_distance = (dw**2 + dh**2)**0.5
-        print(f"{sprite.name} remaining scale distance is {remaining_distance}")
-        total_distance = ((target_w - sprite.origin_w)**2 + (target_h - sprite.origin_h)**2)**0.5
-        print(f"{sprite.name} total scale distance is {total_distance}")
 
-        if remaining_distance < .5:
+        remaining_distance = (dw**2 + dh**2)**0.5
+        total_distance = ((target_w - sprite.origin_w)**2 + (target_h - sprite.origin_h)**2)**0.5
+
+        if remaining_distance < 5:
             sprite.w = target_w
             sprite.h = target_h
-            print(f"{sprite.name} reached target scale.")
             return True
         else:
             lerp_speed = self.lerp_speed.scale
