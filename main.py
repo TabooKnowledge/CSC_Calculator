@@ -42,7 +42,6 @@ class Coordinator:
     def create_classes(self):
         self.sprite_manager = SpriteManager(self)
         self.prep_sheet = PrepSheet(self)
-        self.grid = Grid(self)
         self.draw_manager = DrawManager(self)
         self.animation_manager = AnimationManager(self)
         self.event_manager = EventManager(self)
@@ -52,9 +51,7 @@ class Coordinator:
 
     def initialize_classes(self):
         self.initialize_ingredients()
-        self.initialize_flavors()
         self.ui_manager.initialize()
-        self.grid.initialize()
         self.background.initialize()
         self.event_manager.initialize()
 
@@ -63,12 +60,17 @@ class Coordinator:
             ingredient = Ingredient(self, name, weight)
             self.ingredients.append(ingredient)
 
-    def initialize_flavors(self):
+    def build_flavor_set(self) -> list[Flavor]:
+        flavors = []
+        sprites = []
         for attr_value in vars(self.data.flavors).values():
-            flavor = Flavor(self, attr_value, self.ingredients)
-            flavor.initialize()
-            flavor.load_sprite(Sprite)
-            self.flavors.append(flavor)
+            f = Flavor(self, attr_value, self.ingredients)
+            f.initialize()
+            f.load_sprite(Sprite)
+            sprites.append(f.sprite)
+            flavors.append(f)
+        self.ui_manager.scale_sprites(sprites)
+        return flavors
 
     def main_loop(self):
         while self.running:
@@ -85,6 +87,7 @@ class Coordinator:
             self.ui_manager.update_screen()
             self.sprite_manager.update()
             self.draw_manager.draw_registry()
+            self.ui_manager.draw_icons()
             self.ui_manager.draw_canvas()
             #self.draw_grid()
             pygame.display.flip()

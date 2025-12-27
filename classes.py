@@ -56,7 +56,9 @@ class Flavor:
 
     def load_sprite(self, sprite_class):
         self.sprite = sprite_class(self.coordinator, self.name, self.img_name)
+        self.sprite.depth = CONSTANTS.FLAVOR_DEPTH
         self.sprite.initialize(self.img_tag)
+
 
     def calculate_par_weight(self):
         self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
@@ -129,27 +131,27 @@ class PrepSheet:
 
 
 class Grid:
-    def __init__(self, coordinator):
-        self.coordinator = coordinator
-        self.cols = 4
-        self.rows = 3
+    def __init__(self):
+        self.origin = (0,0)
+        self.cols = 1
+        self.rows = 1
         self.cell_width = 1
         self.cell_height = 1
-        self.coord = []
+        self.cells = []
 
-    def initialize(self, rows=None, cols=None):
-        self.rows = rows if rows is not None else self.rows
-        self.cols = cols if cols is not None else self.cols
-        self.cell_width = self.coordinator.ui_manager.screen.w // self.cols
-        self.cell_height = self.coordinator.ui_manager.screen.h // self.rows
+    def create_grid(self, origin: tuple, cell_width: int, cell_height: int, rows: int, cols: int) -> None:
+        self.origin = origin
+        self.rows = rows
+        self.cols = cols
+        self.cell_width = cell_width
+        self.cell_height = cell_height
         for r in range(self.rows):
             row = []
             for c in range(self.cols):
-                x = c * self.cell_width
-                y = r * self.cell_height
+                x = origin[0] + c * self.cell_width
+                y = origin[1] + r * self.cell_height
                 row.append((x, y))
-            self.coord.append(row)
-        return self.coord
+            self.cells.append(row)
 
 
 class DrawManager:
@@ -157,6 +159,7 @@ class DrawManager:
         self.coordinator = coordinator
         self.registry = []
         self.canvas = None
+        self.show_flavors = False
 
     def draw_registry(self, registry=None):
         self.update_canvas()
@@ -166,8 +169,10 @@ class DrawManager:
             if isinstance(sprite, list):
                 self.draw_registry(sprite)
             elif validate_draw(sprite):
-                sprite.draw(self.canvas)
-                sprite.update()
+                if sprite.img_tag != "flavor":
+                    sprite.draw(self.canvas)
+                    sprite.update()
+
 
     def update_canvas(self):
         self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0))
@@ -201,8 +206,9 @@ class SpriteManager:
 
 class Sprite:
     def __init__(self, coordinator, name, img_name):
+        self.icon = None
         self.origin_depth = None
-        self.depth = None
+        self.depth = 0
         self.idle_focused = False
         self.coordinator = coordinator
         self.state_tag = None
@@ -213,22 +219,26 @@ class Sprite:
         self.y = 0
         self.origin_x = 0
         self.origin_y = 0
+        self.center_x = 0
+        self.center_y = 0
         self.pos = SimpleNamespace(x=0, y=0, origin_x=0, origin_y=0, center_x=0, center_y=0)
         self.focused = False
         self.w = 0
         self.h = 0
         self.origin_w = 0
         self.origin_h = 0
+        self.focused_scale = self.coordinator.ui_manager.focused_scale
         self.surface = None
         self.origin_surface = None
         self.at_home = True
         self.moving_home = False
-        alpha = 255
-        render = True
+        self.alpha = 255
+        self.render = True
 
     def initialize(self, img_tag):
         self.img_tag = img_tag
         self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
+        self.surface.set_alpha(self.alpha)
         self.origin_surface = self.surface
         self.w = self.surface.get_width()
         self.h = self.surface.get_height()
@@ -243,19 +253,22 @@ class Sprite:
     def center_self(self):
         if not self.idle_focused:
             self.coordinator.event_manager.sprite_transitioning = True
-            scale = self.coordinator.ui_manager.focused_scale
-            center_x = self.coordinator.ui_manager.screen.w // 2 - int(self.origin_w * scale) // 2
-            center_y = self.coordinator.ui_manager.screen.h // 2 - int(self.origin_h * scale) // 2
-            scale_done = self.coordinator.animation_manager.lerp_scale(self, scale)
-            move_done = self.coordinator.animation_manager.lerp_move(self, center_x, center_y)
+
+            scale_done = self.coordinator.animation_manager.lerp_scale(self, self.focused_scale)
+            move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, self.center_y)
 
             if scale_done and move_done:
                 self.coordinator.event_manager.sprite_transitioning = False
                 self.idle_focused = True
                 self.at_home = False
                 self.moving_home = False
+                if self.icon is not None:
+                    self.icon.show_contents = True
 
     def return_home(self):
+        if self.icon is not None:
+            self.icon.show_contents = False
+
         scale_done = self.coordinator.animation_manager.lerp_scale(self, 1)
         move_done = self.coordinator.animation_manager.lerp_move(self, self.origin_x, self.origin_y)
 
@@ -265,9 +278,9 @@ class Sprite:
             self.at_home = True
             self.moving_home = False
 
+
     def draw(self, canvas):
-        if self.img_tag != "flavor":
-            canvas.blit(self.surface, (self.x, self.y))
+        canvas.blit(self.surface, (self.x, self.y))
 
     def scale(self, w, h):
         self.w = w
@@ -278,7 +291,7 @@ class Sprite:
 class AnimationManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
-        self.lerp_speed = SimpleNamespace(move=.075, scale=.1, alpha=.01)
+        self.lerp_speed = SimpleNamespace(move=.075, scale=.1, alpha=.1)
         self.active_animations = []
 
     def lerp_move(self, sprite, target_x, target_y):
@@ -333,24 +346,20 @@ class AnimationManager:
 
     def lerp_alpha(self, sprite, target_a):
         current_alpha = sprite.surface.get_alpha()
-        if current_alpha is None:
-            current_alpha = 255
+
         new_alpha = current_alpha + (target_a - current_alpha) * self.lerp_speed.alpha
-        if abs(new_alpha - target_a) <= 5:
+        if abs(new_alpha - target_a) <= 10:
             new_alpha = target_a
-        sprite.surface.set_alpha(int(new_alpha))
+        sprite.alpha = new_alpha
+        sprite.surface.set_alpha(new_alpha)
 
 
 class EventManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
         self.dragged_sprite = None
-        self.clickable_sprites = None
         self.focused_sprite = None
         self.sprite_transitioning = False
-
-    def initialize(self):
-        self.clickable_sprites = [s for s in self.coordinator.draw_manager.registry if hasattr(s, "name") and not isinstance(s, list)]
 
     def update(self, event):
         self.handle_sprite_movement(event)
@@ -377,7 +386,12 @@ class EventManager:
                 self.dragged_sprite = None
 
     def check_icon_clicked(self, x, y):
-        for sprite in self.clickable_sprites:
+        for sprite in self.coordinator.draw_manager.registry:
+            if not isinstance(sprite, Sprite):
+                continue
+            if sprite.img_tag != "icon":
+                continue
+
             if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
                 if hasattr(sprite, "img_tag"):
                     self.check_button_click(sprite)
@@ -449,6 +463,7 @@ class UiManager:
         self.scale_sprites()
         self.layout_icons()
         self.layout_buttons()
+        self.setup_icon_grids()
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
@@ -479,9 +494,16 @@ class UiManager:
         ordered_keys = ["reach_in", "quick", "walk_in"]
         for key in ordered_keys:
             data = getattr(self.icons, key)
-            icon = Sprite(self.coordinator, data.name, data.image_name)
-            icon.initialize("icon")
+            icon_sprite = Sprite(self.coordinator, data.name, data.image_name)
+            icon = Icon(self.coordinator, icon_sprite)
+            icon.populate_content(self.coordinator.build_flavor_set())
+            icon_sprite.icon = icon
             self.icons_list.append(icon)
+
+    def setup_icon_grids(self):
+        for i in self.icons_list:
+            i.setup_grid()
+            i.position_content()
 
     def populate_button_list(self):
         ordered_keys = ["reach_in", "quick", "walk_in"]
@@ -502,6 +524,8 @@ class UiManager:
                 h = sprite.h * self.coordinator.ui_manager.scale.image
                 sprite.origin_w = w
                 sprite.origin_h = h
+                sprite.center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * self.focused_scale) // 2
+                sprite.center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * self.focused_scale) // 2
                 sprite.scale(w, h)
 
     def assign_depth(self, sprite):
@@ -522,44 +546,39 @@ class UiManager:
         self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
         self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
 
+    def draw_icons(self):
+        for icon in self.icons_list:
+            icon.draw_contents()
+
     def layout_icons(self):
         if self.screen.short_axis == "height":
             print("Height is short")
             cell_size = self.coordinator.ui_manager.screen.w // self.num_cells
             for i, icon in enumerate(self.icons_list):
-                icon.x = i * cell_size + cell_size // 2 - icon.w // 2
-                icon.y = self.coordinator.ui_manager.screen.h // 2 - icon.h
-                icon.origin_x = icon.x
-                icon.origin_y = icon.y
-                icon.origin_w = icon.w
-                icon.origin_h = icon.h
+                icon.sprite.x = i * cell_size + cell_size // 2 - icon.sprite.w // 2
+                icon.sprite.y = self.coordinator.ui_manager.screen.h // 2 - icon.sprite.h
+                icon.sprite.origin_x = icon.sprite.x
+                icon.sprite.origin_y = icon.sprite.y
+                icon.sprite.origin_w = icon.sprite.w
+                icon.sprite.origin_h = icon.sprite.h
         else:
             cell_size = self.coordinator.ui_manager.screen.h * .7 // self.num_cells
             for i, icon in enumerate(self.icons_list):
-                icon.x = self.coordinator.ui_manager.screen.w // 2 - icon.w // 2
-                icon.y = i * cell_size + cell_size // 2 - icon.h // 2
-                icon.origin_x = icon.x
-                icon.origin_y = icon.y
-                icon.origin_w = icon.w
-                icon.origin_h = icon.h
+                icon.sprite.x = self.coordinator.ui_manager.screen.w // 2 - icon.sprite.w // 2
+                icon.sprite.y = i * cell_size + cell_size // 2 - icon.sprite.h // 2
+                icon.sprite.origin_x = icon.sprite.x
+                icon.sprite.origin_y = icon.sprite.y
+                icon.sprite.origin_w = icon.sprite.w
+                icon.sprite.origin_h = icon.sprite.h
 
     def layout_buttons(self):
         for i, button in enumerate(self.buttons_list):
-            button.x = self.icons_list[i].x
-            button.y = self.icons_list[i].y + self.icons_list[i].h - button.h // 2
+            button.x = self.icons_list[i].sprite.x
+            button.y = self.icons_list[i].sprite.y + self.icons_list[i].sprite.h - button.h // 2
             button.origin_x = button.x
             button.origin_y = button.y
             button.origin_w = button.w
             button.origin_h = button.h
-
-    def blit_flavors(self):
-        for i, flavor in enumerate(self.flavors):
-            row = i // self.coordinator.grid.cols
-            col = i % self.coordinator.grid.cols
-            flavor.x, flavor.y = self.coordinator.grid.coord[row][col]
-            flavor.x += self.coordinator.grid.cell_width // 2 - flavor.image.get_width() // 2
-            flavor.y += self.coordinator.grid.cell_height // 2 - flavor.image.get_height() // 2
-            self.screen.blit(flavor.image, (flavor.x, flavor.y))
 
     def draw_grid(self):
         cols = self.screen.w // 30
@@ -674,6 +693,51 @@ class NineSlice:
         surface.blit(center_scaled, (self.t, self.t))
 
         return surface
+
+class Icon:
+    def __init__(self, coordinator, sprite):
+        self.coordinator = coordinator
+        self.sprite = sprite
+        self.sprite.initialize("icon")
+        self.contents = None
+        self.grid = None
+        self.show_contents = False
+
+    def populate_content(self, content: list):
+        if not isinstance(content, list):
+            return
+        else:
+            self.contents = content
+
+    def setup_grid(self):
+        self.grid = Grid()
+        origin_x = self.sprite.center_x
+        origin_y = self.sprite.center_y
+        rows = 4
+        cols = 3
+        cell_width = (self.sprite.origin_w * self.sprite.focused_scale // cols)
+        cell_height = (self.sprite.origin_h * self.sprite.focused_scale // rows)
+        self.grid.create_grid((origin_x, origin_y), cell_width, cell_height, rows, cols)
+
+    def position_content(self):
+        for i, c in enumerate(self.contents):
+            c.sprite.alpha = 0
+            c.sprite.surface.set_alpha(0)
+            row = i // self.grid.cols
+            col = i % self.grid.cols
+            c.sprite.x, c.sprite.y = self.grid.cells[row][col]
+            c.sprite.x = c.sprite.x  +self.grid.cell_width // 2 - c.sprite.w // 2
+            c.sprite.y = c.sprite.y + self.grid.cell_height // 2 - c.sprite.h // 2
+            c.sprite.origin_x, c.sprite.origin_y = c.sprite.x, c.sprite.y
+
+    def draw_contents(self):
+        for c in self.contents:
+            sprite = c.sprite
+            if self.show_contents:
+                if sprite.alpha != 255:
+                    self.coordinator.animation_manager.lerp_alpha(sprite, 255)
+                self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
+
 
 
 def validate_draw(object):
