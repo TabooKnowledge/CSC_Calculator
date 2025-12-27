@@ -4,7 +4,11 @@ from types import SimpleNamespace
 CONSTANTS = SimpleNamespace()
 CONSTANTS.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONSTANTS.IMAGE_DIR = os.path.join(CONSTANTS.SCRIPT_DIR, "images")
-
+CONSTANTS.FRONT_DEPTH = 10000
+CONSTANTS.FLAVOR_DEPTH = 3000
+CONSTANTS.BUTTON_DEPTH = 2000
+CONSTANTS.ICON_DEPTH = 1000
+CONSTANTS.BACKGROUND_DEPTH = -1000
 
 ingredients_data = {
     "Cranberries": .28,

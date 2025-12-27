@@ -160,8 +160,8 @@ class DrawManager:
 
     def draw_registry(self, registry=None):
         self.update_canvas()
-        if registry is None:
-            registry = self.registry
+        registry = registry if registry is not None else self.registry
+        registry.sort(key=lambda s: getattr(s, "depth", 0))
         for sprite in registry:
             if isinstance(sprite, list):
                 self.draw_registry(sprite)
@@ -201,6 +201,8 @@ class SpriteManager:
 
 class Sprite:
     def __init__(self, coordinator, name, img_name):
+        self.origin_depth = None
+        self.depth = None
         self.idle_focused = False
         self.coordinator = coordinator
         self.state_tag = None
@@ -258,6 +260,7 @@ class Sprite:
         move_done = self.coordinator.animation_manager.lerp_move(self, self.origin_x, self.origin_y)
 
         if scale_done and move_done:
+            self.depth = self.origin_depth
             self.idle_focused = False
             self.at_home = True
             self.moving_home = False
@@ -393,10 +396,12 @@ class EventManager:
         if self.focused_sprite:
             self.focused_sprite.focused = False
             self.focused_sprite.moving_home = True
+            self.focused_sprite.depth = sprite.origin_depth
 
         self.focused_sprite = sprite
         sprite.focused = True
         sprite.moving_home = False
+        sprite.depth = CONSTANTS.FRONT_DEPTH
 
 
 class UiManager:
@@ -492,11 +497,23 @@ class UiManager:
             if isinstance(sprite, list):
                 self.scale_sprites(sprite)
             elif isinstance(sprite, Sprite):
+                self.assign_depth(sprite)
                 w = sprite.w * self.coordinator.ui_manager.scale.image
                 h = sprite.h * self.coordinator.ui_manager.scale.image
                 sprite.origin_w = w
                 sprite.origin_h = h
                 sprite.scale(w, h)
+
+    def assign_depth(self, sprite):
+        if sprite.img_tag == "flavor":
+            sprite.depth = CONSTANTS.FLAVOR_DEPTH
+            sprite.origin_depth = CONSTANTS.FLAVOR_DEPTH
+        elif sprite.img_tag == "button":
+            sprite.depth = CONSTANTS.BUTTON_DEPTH
+            sprite.origin_depth = CONSTANTS.BUTTON_DEPTH
+        elif sprite.img_tag == "icon":
+            sprite.depth = CONSTANTS.ICON_DEPTH
+            sprite.origin_depth = CONSTANTS.ICON_DEPTH
 
     def update_screen(self):
         self.pygame.screen.fill((0, 0, 0))
