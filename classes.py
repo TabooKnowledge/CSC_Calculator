@@ -339,6 +339,8 @@ class AnimationManager:
 
     def lerp_alpha(self, sprite, target_a):
         current_alpha = sprite.surface.get_alpha()
+        if current_alpha is None:
+            current_alpha = 255
 
         new_alpha = current_alpha + (target_a - current_alpha) * self.lerp_speed.alpha
         if abs(new_alpha - target_a) <= 10:
@@ -353,36 +355,68 @@ class EventManager:
         self.dragged_sprite = None
         self.focused_sprite = None
         self.sprite_transitioning = False
+        self.state = "main"
+        self.event = None
+        self.active_event = None
+        self.event_pos = SimpleNamespace(x=0,y=0)
+        self.event_dict = {
+            "exit": self.exit,
+            "mouse_down": self.check_icon_clicked,
+            "mouse_up": self.update_dragged_sprite,
+            "mouse_motion": self.move_sprite,
+            "finger_down": self.check_icon_clicked,
+            "finger_up": self.update_dragged_sprite,
+            "finger_motion": self.move_sprite,
+        }
 
-    def update(self, event):
-        self.handle_sprite_movement(event)
+    def update(self):
+        self.retrieve_pos()
+        self.check_event()
+        self.handle_event()
+        self.active_event = None
 
-    def handle_sprite_movement(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = event.pos
-            self.check_icon_clicked(mouse_x, mouse_y)
-        elif event.type == pygame.MOUSEMOTION:
-            self.move_sprite(*event.pos)
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if self.dragged_sprite:
-                self.dragged_sprite = None
-        elif event.type == pygame.FINGERDOWN:
-            touch_x = event.x * self.coordinator.ui_manager.screen.w
-            touch_y = event.y * self.coordinator.ui_manager.screen.h
-            self.check_icon_clicked(touch_x, touch_y)
-        elif event.type == pygame.FINGERMOTION:
-            touch_x = event.x * self.coordinator.ui_manager.screen.w
-            touch_y = event.y * self.coordinator.ui_manager.screen.h
-            self.move_sprite(touch_x, touch_y)
-        elif event.type == pygame.FINGERUP:
-            if self.dragged_sprite:
-                self.dragged_sprite = None
+    def retrieve_pos(self):
+        if self.event is not None:
+            if hasattr(self.event, "pos"):
+                self.event_pos.x, self.event_pos.y = self.event.pos
+            elif hasattr(self.event, "x") and hasattr(self.event, "y"):
+                self.event_pos.x = self.event.x * self.coordinator.ui_manager.screen.w
+                self.event_pos.y = self.event.y * self.coordinator.ui_manager.screen.h
 
-    def check_icon_clicked(self, x, y):
+    def check_event(self):
+        if self.event.type == pygame.QUIT:
+            self.active_event = self.event_dict["exit"]
+        elif self.event.type == pygame.KEYDOWN:
+            if self.event.key == pygame.K_ESCAPE:
+                self.active_event = self.event_dict["exit"]
+        elif self.event.type == pygame.MOUSEBUTTONDOWN:
+            self.active_event = self.event_dict["mouse_down"]
+        elif self.event.type == pygame.MOUSEMOTION:
+            self.active_event = self.event_dict["mouse_motion"]
+        elif self.event.type == pygame.MOUSEBUTTONUP:
+            self.active_event = self.event_dict["mouse_up"]
+        elif self.event.type == pygame.FINGERDOWN:
+            self.active_event = self.event_dict["finger_down"]
+        elif self.event.type == pygame.FINGERMOTION:
+            self.active_event = self.event_dict["finger_motion"]
+        elif self.event.type == pygame.FINGERUP:
+            self.active_event = self.event_dict["finger_up"]
+
+    def exit(self):
+        self.coordinator.running = False
+
+    def handle_event(self):
+        if self.active_event is not None:
+            self.active_event()
+
+    def update_dragged_sprite(self):
+            self.dragged_sprite = None
+
+    def check_icon_clicked(self):
         if self.sprite_transitioning:
             return
 
-        if self.focused_sprite and self.point_in_sprite(self.focused_sprite, x, y):
+        if self.focused_sprite and self.point_in_sprite(self.focused_sprite):
             return
 
         hits = []
@@ -391,7 +425,7 @@ class EventManager:
                 continue
             if s.img_tag != "icon":
                 continue
-            if self.point_in_sprite(s, x, y):
+            if self.point_in_sprite(s):
                 hits.append(s)
         if not hits:
             self.unfocus_current()
@@ -406,8 +440,8 @@ class EventManager:
         if clicked.state_tag is not None:
             self.coordinator.state_manager.state = clicked.state_tag
 
-    def point_in_sprite(self, s, x, y):
-            return (s.x <= x <= s.x + s.w) and (s.y <= y <= s.y + s.h)
+    def point_in_sprite(self, s,):
+            return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
 
     def set_focused_sprite(self, sprite):
         if self.focused_sprite and self.focused_sprite is not sprite:
@@ -428,40 +462,37 @@ class EventManager:
         self.focused_sprite.depth = self.focused_sprite.origin_depth
         self.focused_sprite = None
 
-    def move_sprite(self, x, y):
+    def move_sprite(self):
         if self.dragged_sprite:
-            self.dragged_sprite.x = x - self.dragged_sprite.w // 2
-            self.dragged_sprite.y = y - self.dragged_sprite.h // 2
+            self.dragged_sprite.x = self.event_pos.x - self.dragged_sprite.w // 2
+            self.dragged_sprite.y = self.event_pos.y - self.dragged_sprite.h // 2
 
 
 class UiManager:
     def __init__(self, coordinator):
-        self.TRANSPARENT = None
-        self.font = None
-        self.focused_sprite = None
-        self.focused_scale = 2.125
-        self.short_axis = None
-        self.num_cells = 3
-        self.cell_size = None
         self.coordinator = coordinator
-        self.flavors = []
-        self.buttons = []
-        self.icons = []
-        self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
-        self.base_resolution = SimpleNamespace(w=0, h=0)
-        self.screen = SimpleNamespace(w=0, h=0, short=None, dimensions=None, short_axis=None)
-        self.resolution_profiles = None
-        self.bg = None
-        self.buttons = buttons_data
-        self.icons = icons_data
-        self.icons_list = []
-        self.buttons_list = []
-        self.dithered_bg = None
-        self.bg = None
+        self.buttons_data = buttons_data
+        self.icons_data = icons_data
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
-        self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None)
+
+        self.icons_list = []
+        self.buttons_list = []
+
+        self.screen = SimpleNamespace(w=0, h=0, short=0, dimensions=None, short_axis=None)
+        self.base_resolution = SimpleNamespace(w=0, h=0)
+        self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
         self.center = SimpleNamespace(x=0, y=0)
+
+        self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None)
+        self.TRANSPARENT = (255, 0, 255)
+        self.font = None
+
+        self.focused_sprite = None
+        self.focused_scale = 2.125
+
+        self.num_cells = 3
+        self.cell_size = None
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
@@ -470,27 +501,19 @@ class UiManager:
         self.screen.short = min(self.screen.w, self.screen.h)
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
-        self.pygame.static_canvas = pygame.Surface(self.screen.dimensions)
+        self.pygame.static_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.TRANSPARENT = (255, 0, 255)
         self.pygame.dynamic_canvas.set_colorkey(self.TRANSPARENT)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
-        #self.load_bg()
         self.populate_icon_list()
         self.populate_button_list()
-        #self.load_sprites()
         self.scale_sprites()
         self.layout_icons()
         self.layout_buttons()
         self.setup_icon_grids()
         self.font = pygame.font.Font(None, int(self.scale.font))
-
-    def load_bg(self):
-        self.bg = Sprite(self.coordinator,"background", "background.png")
-        self.bg.initialize("background")
-        self.bg.w = self.screen.w
-        self.bg.h = self.screen.h
 
     def adjust_resolution(self):
         self.retrieve_resolution_data()
@@ -516,7 +539,7 @@ class UiManager:
     def populate_icon_list(self):
         ordered_keys = ["reach_in", "quick", "walk_in"]
         for key in ordered_keys:
-            data = getattr(self.icons, key)
+            data = getattr(self.icons_data, key)
             icon_sprite = Sprite(self.coordinator, data.name, data.image_name)
             icon = Icon(self.coordinator, icon_sprite)
             icon.populate_content(self.coordinator.build_flavor_set(key))
@@ -531,13 +554,14 @@ class UiManager:
     def populate_button_list(self):
         ordered_keys = ["reach_in", "quick", "walk_in"]
         for key in ordered_keys:
-            data = getattr(self.buttons, key)
+            data = getattr(self.buttons_data, key)
             button = Sprite(self.coordinator, data.name, data.image_name)
             button.initialize("button")
             self.buttons_list.append(button)
 
     def scale_sprites(self, registry=None):
         registry = registry if registry is not None else self.coordinator.draw_manager.registry
+
         for sprite in registry:
             if isinstance(sprite, list):
                 self.scale_sprites(sprite)
@@ -673,8 +697,8 @@ class Background:
         self.bg_name = "background.png"
 
     def initialize(self):
-        self.bg_surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg_name))
-        self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.border_name))
+        self.bg_surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg_name)).convert()
+        self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.border_name)).convert_alpha()
         w = self.coordinator.ui_manager.screen.w
         h = self.coordinator.ui_manager.screen.h
         self.bg_surface = pygame.transform.scale(self.bg_surface, (w, h))

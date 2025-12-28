@@ -66,7 +66,6 @@ class Coordinator:
             keys = CONSTANTS.QUICK_ORDER
         else:
             keys = CONSTANTS.WALK_IN_ORDER
-
         flavors = []
         sprites = []
         flavors_by_name = {v.name: v for v in vars(self.data.flavors).values()}
@@ -85,14 +84,9 @@ class Coordinator:
     def main_loop(self):
         while self.running:
             self.state_manager.update()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                self.event_manager.update(event)
-
+            for e in pygame.event.get():
+                self.event_manager.event = e
+                self.event_manager.update()
             self.ui_manager.update_screen()
             self.draw_manager.draw_registry()
             self.ui_manager.draw_icons()
