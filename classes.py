@@ -196,13 +196,6 @@ class SpriteManager:
         for sprite in self.sprites:
             sprite.update()
 
-    def load_namespace_sprites(self, namespace, img_tag=None):
-        for attr_value in vars(namespace).values():
-            sprite = Sprite(self.coordinator, attr_value.name, attr_value.image_name)
-            sprite.state_tag = getattr(attr_value, "state_tag", None)
-            sprite.initialize(img_tag)
-            attr_value.surface = sprite.surface
-
 
 class Sprite:
     def __init__(self, coordinator, name, img_name):
@@ -443,6 +436,7 @@ class EventManager:
 
 class UiManager:
     def __init__(self, coordinator):
+        self.font = None
         self.focused_sprite = None
         self.focused_scale = 2.125
         self.short_axis = None
@@ -487,6 +481,7 @@ class UiManager:
         self.layout_icons()
         self.layout_buttons()
         self.setup_icon_grids()
+        self.font = pygame.font.Font(None, int(self.scale.font))
 
     def load_background(self):
         self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
@@ -760,6 +755,11 @@ class Icon:
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
                 self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
+                text_surface = self.coordinator.ui_manager.font.render(sprite.name, True, (0,0,0))
+                sprite_center_x = sprite.x + sprite.w // 2
+                t_x = sprite_center_x - text_surface.get_width() // 2
+                t_y = sprite.y + sprite.h
+                self.coordinator.ui_manager.pygame.dynamic_canvas.blit(text_surface, (t_x, t_y))
             else:
                 sprite.alpha = 0
                 sprite.surface.set_alpha(sprite.alpha)

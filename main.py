@@ -84,7 +84,6 @@ class Coordinator:
                 self.event_manager.update(event)
 
             self.ui_manager.update_screen()
-            self.sprite_manager.update()
             self.draw_manager.draw_registry()
             self.ui_manager.draw_icons()
             self.ui_manager.draw_canvas()
