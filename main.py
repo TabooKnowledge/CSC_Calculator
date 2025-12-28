@@ -59,10 +59,21 @@ class Coordinator:
             ingredient = Ingredient(self, name, weight)
             self.ingredients.append(ingredient)
 
-    def build_flavor_set(self) -> list[Flavor]:
+    def build_flavor_set(self, icon_name) -> list[Flavor]:
+        if icon_name == "reach_in":
+            keys = CONSTANTS.REACH_IN_ORDER
+        elif icon_name == "quick":
+            keys = CONSTANTS.QUICK_ORDER
+        else:
+            keys = CONSTANTS.WALK_IN_ORDER
+
         flavors = []
         sprites = []
-        for attr_value in vars(self.data.flavors).values():
+        flavors_by_name = {v.name: v for v in vars(self.data.flavors).values()}
+        for key in keys:
+            attr_value = flavors_by_name.get(key)
+            if not attr_value:
+                continue
             f = Flavor(self, attr_value, self.ingredients)
             f.initialize()
             f.load_sprite(Sprite)

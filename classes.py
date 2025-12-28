@@ -457,7 +457,7 @@ class UiManager:
         self.icons_list = []
         self.buttons_list = []
         self.dithered_bg = None
-        self.bg = SimpleNamespace(name="", surface=None)
+        self.bg = None
         self.resolution_profiles = resolution_profiles
         self.active_profile = None
         self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None)
@@ -473,8 +473,8 @@ class UiManager:
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions)
         self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions)
         pygame.display.set_caption("Chicken Salad Production Software")
-        self.bg.name = "rainbow_bg.jpg"
         self.adjust_resolution()
+        self.load_bg()
         self.populate_icon_list()
         self.populate_button_list()
         #self.load_sprites()
@@ -484,9 +484,11 @@ class UiManager:
         self.setup_icon_grids()
         self.font = pygame.font.Font(None, int(self.scale.font))
 
-    def load_background(self):
-        self.bg.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg.name))
-        self.bg.surface = pygame.transform.scale(self.bg.surface, self.screen.dimensions)
+    def load_bg(self):
+        self.bg = Sprite(self.coordinator,"background", "background.png")
+        self.bg.initialize("background")
+        self.bg.w = self.screen.w
+        self.bg.h = self.screen.h
 
     def adjust_resolution(self):
         self.retrieve_resolution_data()
@@ -515,7 +517,7 @@ class UiManager:
             data = getattr(self.icons, key)
             icon_sprite = Sprite(self.coordinator, data.name, data.image_name)
             icon = Icon(self.coordinator, icon_sprite)
-            icon.populate_content(self.coordinator.build_flavor_set())
+            icon.populate_content(self.coordinator.build_flavor_set(key))
             icon_sprite.icon = icon
             self.icons_list.append(icon)
 
@@ -537,7 +539,7 @@ class UiManager:
         for sprite in registry:
             if isinstance(sprite, list):
                 self.scale_sprites(sprite)
-            elif isinstance(sprite, Sprite):
+            elif isinstance(sprite, Sprite) and sprite.name != "background":
                 self.assign_depth(sprite)
                 w = sprite.w * self.coordinator.ui_manager.scale.image
                 h = sprite.h * self.coordinator.ui_manager.scale.image
@@ -557,6 +559,8 @@ class UiManager:
         elif sprite.img_tag == "icon":
             sprite.depth = CONSTANTS.ICON_DEPTH
             sprite.origin_depth = CONSTANTS.ICON_DEPTH
+        elif sprite.img_tag == "background":
+            sprite.depth = CONSTANTS.BACKGROUND_DEPTH
 
     def update_screen(self):
         self.pygame.screen.fill((0, 0, 0))

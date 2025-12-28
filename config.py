@@ -9,6 +9,10 @@ CONSTANTS.FLAVOR_DEPTH = 3000
 CONSTANTS.BUTTON_DEPTH = 2000
 CONSTANTS.ICON_DEPTH = 1000
 CONSTANTS.BACKGROUND_DEPTH = -1000
+CONSTANTS.REACH_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
+CONSTANTS.QUICK_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
+CONSTANTS.WALK_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
+
 
 ingredients_data = {
     "Cranberries": .28,
