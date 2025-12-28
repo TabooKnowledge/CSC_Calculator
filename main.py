@@ -108,7 +108,7 @@ class Coordinator:
 
 coordinator = Coordinator()
 coordinator.initialize()
-cProfile.run("coordinator.main_loop()")
-#coordinator.main_loop()
+#cProfile.run("coordinator.main_loop()")
+coordinator.main_loop()
 pygame.quit()
 sys.exit()
