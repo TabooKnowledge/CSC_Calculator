@@ -175,7 +175,7 @@ class DrawManager:
 
 
     def update_canvas(self):
-        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0, 0))
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill(self.coordinator.ui_manager.TRANSPARENT)
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
 
     def subscribe_object(self, sprite):
@@ -232,7 +232,6 @@ class Sprite:
         self.img_tag = img_tag
         self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
         self.surface = self.surface.convert()
-        self.surface.set_alpha(self.alpha)
         self.origin_surface = self.surface
         self.w = self.surface.get_width()
         self.h = self.surface.get_height()
@@ -438,6 +437,7 @@ class EventManager:
 
 class UiManager:
     def __init__(self, coordinator):
+        self.TRANSPARENT = None
         self.font = None
         self.focused_sprite = None
         self.focused_scale = 2.125
@@ -472,7 +472,9 @@ class UiManager:
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions)
-        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions, pygame.SRCALPHA)
+        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
+        self.TRANSPARENT = (255, 0, 255)
+        self.pygame.dynamic_canvas.set_colorkey(self.TRANSPARENT)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
         #self.load_bg()
@@ -672,13 +674,13 @@ class Background:
         self.bg_name = "background.png"
 
     def initialize(self):
-        #self.bg_surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg_name))
+        self.bg_surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg_name))
         self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.border_name))
         w = self.coordinator.ui_manager.screen.w
         h = self.coordinator.ui_manager.screen.h
-        #self.bg_surface = pygame.transform.scale(self.bg_surface, (w, h))
+        self.bg_surface = pygame.transform.scale(self.bg_surface, (w, h))
         self.nine_slice_bg = NineSlice(self.border_image, self.border_thickness).render(w, h)
-        #self.coordinator.ui_manager.pygame.static_canvas.blit(self.bg_surface, (0, 0))
+        self.coordinator.ui_manager.pygame.static_canvas.blit(self.bg_surface, (0, 0))
         self.coordinator.ui_manager.pygame.static_canvas.blit(self.nine_slice_bg, (0, 0))
 
 
