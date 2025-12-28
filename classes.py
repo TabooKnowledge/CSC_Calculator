@@ -230,8 +230,7 @@ class Sprite:
 
     def initialize(self, img_tag):
         self.img_tag = img_tag
-        self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
-        self.surface = self.surface.convert()
+        self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name)).convert()
         self.origin_surface = self.surface
         self.w = self.surface.get_width()
         self.h = self.surface.get_height()
