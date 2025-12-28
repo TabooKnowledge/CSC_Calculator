@@ -34,7 +34,7 @@ ingredients_data = {
 
 resolution_profiles = SimpleNamespace(
     small=SimpleNamespace(max_short=600, base_width=360, base_height=640, scale_multiplier=.8, font_size=8),
-    medium=SimpleNamespace(max_short=800, base_width=768, base_height=1024, scale_multiplier=.7, font_size=12),
+    medium=SimpleNamespace(max_short=800, base_width=768, base_height=1024, scale_multiplier=.6, font_size=50),
     large=SimpleNamespace(max_short=1000, base_width=1920, base_height=1080, scale_multiplier=.8, font_size=40)
 )
 

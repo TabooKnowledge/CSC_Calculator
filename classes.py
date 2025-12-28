@@ -324,6 +324,7 @@ class AnimationManager:
         if remaining_distance < 5:
             sprite.w = target_w
             sprite.h = target_h
+            sprite.surface = pygame.transform.scale(sprite.origin_surface, (int(sprite.w), int(sprite.h)))
             return True
         else:
             lerp_speed = self.lerp_speed.scale
@@ -580,7 +581,7 @@ class UiManager:
                 icon.sprite.origin_w = icon.sprite.w
                 icon.sprite.origin_h = icon.sprite.h
         else:
-            cell_size = self.coordinator.ui_manager.screen.h * .7 // self.num_cells
+            cell_size = self.coordinator.ui_manager.screen.h * .65 // self.num_cells
             for i, icon in enumerate(self.icons_list):
                 icon.sprite.x = self.coordinator.ui_manager.screen.w // 2 - icon.sprite.w // 2
                 icon.sprite.y = i * cell_size + cell_size // 2 - icon.sprite.h // 2
