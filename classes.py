@@ -386,27 +386,37 @@ class EventManager:
                 self.dragged_sprite = None
 
     def check_icon_clicked(self, x, y):
-        clicked_sprite = False
-        icons = [
-            s for s in self.coordinator.draw_manager.registry
-            if isinstance(s, Sprite) and s.img_tag == "icon"
-        ]
-        for sprite in icons:
-            if sprite.x <= x <= sprite.x + sprite.w and sprite.y <= y <= sprite.y + sprite.h:
-                self.set_focused_sprite(sprite)
-                clicked_sprite = sprite
-                break
-                #self.dragged_sprite = sprite
-        if clicked_sprite:
-            self.set_focused_sprite(clicked_sprite)
-            if clicked_sprite.state_tag is not None:
-                self.coordinator.state_manager.state = clicked_sprite.state_tag
-        else:
-            self.unfocus_current()
-
-    def set_focused_sprite(self, sprite):
         if self.sprite_transitioning:
             return
+
+        if self.focused_sprite and self.point_in_sprite(self.focused_sprite, x, y):
+            return
+
+        hits = []
+        for s in self.coordinator.draw_manager.registry:
+            if not isinstance(s, Sprite):
+                continue
+            if s.img_tag != "icon":
+                continue
+            if self.point_in_sprite(s, x, y):
+                hits.append(s)
+        if not hits:
+            self.unfocus_current()
+            return
+
+        def z_keys(s):
+            return s.depth, self.coordinator.draw_manager.registry.index(s)
+
+        clicked = max(hits, key=z_keys)
+
+        self.set_focused_sprite(clicked)
+        if clicked.state_tag is not None:
+            self.coordinator.state_manager.state = clicked.state_tag
+
+    def point_in_sprite(self, s, x, y):
+            return (s.x <= x <= s.x + s.w) and (s.y <= y <= s.y + s.h)
+
+    def set_focused_sprite(self, sprite):
         if self.focused_sprite and self.focused_sprite is not sprite:
             self.focused_sprite.focused = False
             self.focused_sprite.moving_home = True
@@ -418,10 +428,12 @@ class EventManager:
 
     def unfocus_current(self):
         if not self.focused_sprite:
+            print("No sprite to unfocus")
             return
         self.focused_sprite.focused = False
         self.focused_sprite.moving_home = True
         self.focused_sprite.depth = self.focused_sprite.origin_depth
+        self.focused_sprite = None
 
     def move_sprite(self, x, y):
         if self.dragged_sprite:
