@@ -175,7 +175,7 @@ class DrawManager:
 
 
     def update_canvas(self):
-        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0))
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0, 0))
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
 
     def subscribe_object(self, sprite):
@@ -471,10 +471,10 @@ class UiManager:
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions)
-        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions)
+        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions, pygame.SRCALPHA).convert_alpha()
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
-        self.load_bg()
+        #self.load_bg()
         self.populate_icon_list()
         self.populate_button_list()
         #self.load_sprites()
@@ -567,7 +567,7 @@ class UiManager:
 
     def draw_canvas(self):
         self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
-        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
 
     def draw_icons(self):
         for icon in self.icons_list:
@@ -662,17 +662,22 @@ class StateManager:
 class Background:
     def __init__(self, coordinator):
         self.coordinator = coordinator
-        self.img_name = "bg_border_blue.png"
+        self.border_name = "bg_border_blue.png"
         self.border_image = None
         self.nine_slice_bg = None
         self.border_thickness = 8
         self.nine_slice = None
+        self.bg_surface = None
+        self.bg_name = "background.png"
 
     def initialize(self):
-        self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name))
+        self.bg_surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.bg_name))
+        self.border_image = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.border_name))
         w = self.coordinator.ui_manager.screen.w
         h = self.coordinator.ui_manager.screen.h
+        self.bg_surface = pygame.transform.scale(self.bg_surface, (w, h))
         self.nine_slice_bg = NineSlice(self.border_image, self.border_thickness).render(w, h)
+        self.coordinator.ui_manager.pygame.static_canvas.blit(self.bg_surface, (0, 0))
         self.coordinator.ui_manager.pygame.static_canvas.blit(self.nine_slice_bg, (0, 0))
 
 
