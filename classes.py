@@ -481,7 +481,7 @@ class EventManager:
 
         self.set_focused_icon(clicked)
         if clicked.state_tag is not None:
-            print(f"State: {clicked.state_tag}")
+            print(f"State set to: {clicked.state_tag}")
             self.state = clicked.state_tag
 
     def check_flavor_clicked(self):
@@ -527,6 +527,7 @@ class EventManager:
 
     def unfocus_current_icon(self):
         if not self.focused_icon_sprite:
+            self.reset_to_main()
             print("No icon to unfocus")
             return
         self.focused_icon_sprite.focused = False
