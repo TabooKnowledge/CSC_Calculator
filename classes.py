@@ -176,7 +176,8 @@ class DrawManager:
 
 
     def update_canvas(self):
-        self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0, 0))
+        #self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
 
     def subscribe_object(self, sprite):
@@ -563,7 +564,8 @@ class UiManager:
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions).convert()
-        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
+        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions, pygame.SRCALPHA).convert_alpha()
+        #self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.pygame.dynamic_canvas.set_colorkey(CONSTANTS.TRANSPARENT)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
