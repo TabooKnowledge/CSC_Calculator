@@ -15,6 +15,11 @@ class Ingredient:
     def total_weight(self, mix_weight):
         self.totaled_weight = round((mix_weight / 4) * self.weight, 2)
 
+def initialize_ingredients(coordinator):
+    for name, weight in ingredients_data.items():
+        ingredient = Ingredient(coordinator, name, weight)
+        coordinator.ingredients.append(ingredient)
+
 
 class Flavor:
     def __init__(self, coordinator, flavor_data, ingredients_data):
@@ -26,7 +31,7 @@ class Flavor:
         self.coordinator = coordinator
         self.data = SimpleNamespace(flavor=flavor_data, ingredients=ingredients_data)
         self.tag = None
-        self.img_tag = "flavor"
+        self.type = "flavor_class"
         #Visuals
         self.img_name = None
         self.sprite = None
@@ -60,10 +65,11 @@ class Flavor:
                     self.ingredients.append(ingredient)
                     break
 
-    def load_sprite(self, sprite_class):
-        self.sprite = sprite_class(self.coordinator, self.name, self.img_name)
+    def load_sprite(self):
+        self.sprite = Sprite(self.coordinator, self.name, self.img_name)
         self.sprite.flavor = self
-        self.sprite.initialize(self.img_tag)
+        self.sprite.type = "flavor"
+        self.sprite.initialize()
 
     def calculate_par_weight(self):
         self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
@@ -88,6 +94,27 @@ class Flavor:
             ingredient.total_weight(self.total_mix_weight)
             self.totaled_ingredient_weight += ingredient.weight
 
+def build_flavor_set(coordinator, icon_name) -> list ["Flavor"]:
+    if icon_name == "reach_in":
+        keys = CONSTANTS.REACH_IN_ORDER
+    elif icon_name == "quick":
+        keys = CONSTANTS.QUICK_ORDER
+    else:
+        keys = CONSTANTS.WALK_IN_ORDER
+    flavors = []
+    sprites = []
+    flavors_by_name = {v.name: v for v in vars(coordinator.data.flavors).values()}
+    for key in keys:
+        attr_value = flavors_by_name.get(key)
+        if not attr_value:
+            continue
+        f = Flavor(coordinator, attr_value, coordinator.ingredients)
+        f.initialize()
+        f.load_sprite()
+        sprites.append(f.sprite)
+        flavors.append(f)
+    coordinator.ui_manager.scale_sprites(sprites)
+    return flavors
 
 class PrepSheet:
     def __init__(self, coordinator):
@@ -211,11 +238,11 @@ class Sprite:
     def __init__(self, coordinator, name, img_name):
         self.flavor = None
         self.icon = None
-        self.origin_depth = None
+        self.origin_depth = 0
         self.depth = 0
         self.idle_focused = False
         self.coordinator = coordinator
-        self.state_tag = None
+        self.type = None
         self.name = name
         self.img_name = img_name
         self.img_tag = None
@@ -239,8 +266,7 @@ class Sprite:
         self.alpha = 255
         self.render = True
 
-    def initialize(self, img_tag):
-        self.img_tag = img_tag
+    def initialize(self):
         self.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, self.img_name)).convert()
         self.origin_surface = self.surface
         self.w = self.surface.get_width()
@@ -357,6 +383,7 @@ class AnimationManager:
 
 class EventManager:
     def __init__(self, coordinator):
+        self.last_flavor_sprite = None
         self.coordinator = coordinator
         self.dragged_sprite = None
         self.focused_icon_sprite = None
@@ -371,29 +398,17 @@ class EventManager:
         self.state_dict = {
             "main": {
                 "exit": self.exit,
-                "pointer_down": self.check_icon_clicked,
+                "pointer_down": self.check_clicked,
                 "pointer_up": self.update_dragged_sprite,
                 "pointer_moving": self.move_sprite,
 
             },
-            "reach_in": {
+            "container_open": {
                 "exit": self.exit,
-                "pointer_down": self.check_flavor_clicked,
+                "pointer_down": self.check_clicked,
                 "pointer_up": self.update_dragged_sprite,
                 "pointer_moving": self.move_sprite,
             },
-            "quick": {
-                "exit": self.exit,
-                "pointer_down": self.check_flavor_clicked,
-                "pointer_up": self.update_dragged_sprite,
-                "pointer_moving": self.move_sprite,
-            },
-            "walk_in": {
-                "exit": self.exit,
-                "pointer_down": self.check_flavor_clicked,
-                "pointer_up": self.update_dragged_sprite,
-                "pointer_moving": self.move_sprite,
-            }
         }
 
     def update(self):
@@ -407,7 +422,7 @@ class EventManager:
 
     def delay(self):
         now = pygame.time.get_ticks()
-        if self.event.type in (pygame.FINGERDOWN, pygame.FINGERMOTION, pygame.FINGERUP):
+        if self.event.type in (pygame.FINGERDOWN, pygame.FINGERUP):
             self.delay_timer = now + 1
         if now < self.delay_timer:
             return True
@@ -442,31 +457,47 @@ class EventManager:
 
     def execute_event(self):
         if self.active_event is not None:
-            self.active_event()
+            if self.state == "main":
+                self.active_event(type="icon")
+            elif self.state == "container_open":
+                self.active_event(type="flavor")
         self.active_event = None
 
-    def exit(self):
+    def exit(self, *args, **kwargs):
         self.coordinator.running = False
 
-    def update_dragged_sprite(self):
+    def update_dragged_sprite(self, *args, **kwargs):
         self.dragged_sprite = None
 
-    def check_icon_clicked(self):
+    def check_clicked(self, *args, **kwargs):
+        _type = kwargs.get("type")
+        if _type is None:
+            ValueError("check_clicked requires type=sprite.type")
+            return
+
         if self.sprite_transitioning:
             return
-        if self.focused_icon_sprite and self.point_in_sprite(self.focused_icon_sprite):
-            return
+
+        if _type == "icon":
+            if self.focused_icon_sprite and self.point_in_sprite(self.focused_icon_sprite):
+                return
+        else:
+            if self.focused_flavor_sprite and self.point_in_sprite(self.focused_flavor_sprite):
+                return
 
         hits = []
         for s in self.coordinator.draw_manager.registry:
             if not isinstance(s, Sprite):
                 continue
-            if s.img_tag != "icon":
+            if s.type != _type:
                 continue
             if self.point_in_sprite(s):
                 hits.append(s)
         if not hits:
-            self.unfocus_current_icon()
+            if _type == "icon":
+                self.unfocus_current_icon()
+            else:
+                self.unfocus_current_flavor()
             return
 
         def z_keys(s):
@@ -474,35 +505,13 @@ class EventManager:
 
         clicked = max(hits, key=z_keys)
 
-        self.set_focused_icon(clicked)
-        if clicked.state_tag is not None:
-            print(f"State set to: {clicked.state_tag}")
-            self.state = clicked.state_tag
-
-    def check_flavor_clicked(self):
-        if self.sprite_transitioning:
-            return
-        if self.focused_flavor_sprite and self.point_in_sprite(self.focused_flavor_sprite):
-            return
-        hits = []
-        for s in self.coordinator.draw_manager.registry:
-            if not isinstance(s, Sprite):
-                continue
-            if s.img_tag != "flavor" or s.render == False:
-                continue
-            if self.point_in_sprite(s):
-                hits.append(s)
-        if not hits:
-            print("No flavor found")
-            self.unfocus_current_flavor()
-            return
-
-        def z_keys(s):
-            return s.depth, self.coordinator.draw_manager.registry.index(s)
-
-        clicked = max(hits, key=z_keys)
-        self.set_focused_flavor(clicked)
-        print(f"Focused flavor was set to {clicked.name}")
+        if _type == "icon":
+            self.set_focused_icon(clicked)
+            if clicked.type == "icon":
+                print(f"State set to container_open")
+                self.state = "container_open"
+        else:
+            self.set_focused_flavor(clicked)
 
     def point_in_sprite(self, s,):
             return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
@@ -513,7 +522,7 @@ class EventManager:
         if self.focused_icon_sprite and self.focused_icon_sprite is not sprite:
             self.focused_icon_sprite.focused = False
             self.focused_icon_sprite.moving_home = True
-            self.focused_icon_sprite.depth = self.focused_icon_sprite.origin_depth
+            self.focused_icon_sprite.depth = CONSTANTS.ICON_DEPTH
             self.focused_icon_sprite.icon.show_contents = False
         sprite.focused = True
         sprite.moving_home = False
@@ -522,12 +531,10 @@ class EventManager:
 
     def unfocus_current_icon(self):
         if not self.focused_icon_sprite:
-            self.reset_to_main()
-            print("No icon to unfocus")
             return
         self.focused_icon_sprite.focused = False
         self.focused_icon_sprite.moving_home = True
-        self.focused_icon_sprite.depth = self.focused_icon_sprite.origin_depth
+        self.focused_icon_sprite.depth = CONSTANTS.ICON_DEPTH
         self.focused_icon_sprite.icon.show_contents = False
         self.focused_icon_sprite = None
 
@@ -545,20 +552,25 @@ class EventManager:
 
     def unfocus_current_flavor(self):
         if not self.focused_flavor_sprite:
-            self.reset_to_main()
-            print("No flavor to unfocus")
-            return
+            if self.last_flavor_sprite and self.last_flavor_sprite.moving_home:
+                return
+            else:
+                self.reset_to_main()
+                return
+
         self.focused_flavor_sprite.focused = False
         self.focused_flavor_sprite.moving_home = True
         self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth + 1
+        self.last_flavor_sprite = self.focused_flavor_sprite
         self.focused_flavor_sprite = None
 
     def reset_to_main(self):
         self.unfocus_current_icon()
         self.active_state = self.state_dict["main"]
         self.state = "main"
+        print("State was set to main")
 
-    def move_sprite(self):
+    def move_sprite(self, *args, **kwargs):
         if self.dragged_sprite:
             self.dragged_sprite.x = self.event_pos.x - self.dragged_sprite.w // 2
             self.dragged_sprite.y = self.event_pos.y - self.dragged_sprite.h // 2
@@ -635,9 +647,10 @@ class UiManager:
         for key in ordered_keys:
             data = getattr(self.icons_data, key)
             icon_sprite = Sprite(self.coordinator, data.name, data.image_name)
-            icon_sprite.state_tag = key
+            icon_sprite.type = "icon"
+            icon_sprite.origin_depth = CONSTANTS.ICON_DEPTH
             icon = Icon(self.coordinator, icon_sprite, key)
-            icon.populate_content(self.coordinator.build_flavor_set(key))
+            icon.populate_content(build_flavor_set(self.coordinator, key))
             icon_sprite.icon = icon
             self.icons_list.append(icon)
 
@@ -651,16 +664,15 @@ class UiManager:
         for key in ordered_keys:
             data = getattr(self.buttons_data, key)
             button = Sprite(self.coordinator, data.name, data.image_name)
-            button.initialize("button")
+            button.type = "button"
+            button.initialize()
             self.buttons_list.append(button)
 
     def scale_sprites(self, registry=None):
         registry = registry if registry is not None else self.coordinator.draw_manager.registry
 
         for sprite in registry:
-            if isinstance(sprite, list):
-                self.scale_sprites(sprite)
-            elif isinstance(sprite, Sprite) and sprite.name != "background":
+            if isinstance(sprite, Sprite) and sprite.name != "background":
                 self.assign_depth(sprite)
                 w = sprite.w * self.coordinator.ui_manager.scale.image
                 h = sprite.h * self.coordinator.ui_manager.scale.image
@@ -670,7 +682,8 @@ class UiManager:
                 sprite.center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * self.focused_scale) // 2
                 sprite.scale(w, h)
 
-    def assign_depth(self, sprite):
+    @staticmethod
+    def assign_depth(sprite):
         if sprite.img_tag == "button":
             sprite.depth = CONSTANTS.BUTTON_DEPTH
             sprite.origin_depth = CONSTANTS.BUTTON_DEPTH
@@ -714,7 +727,7 @@ class UiManager:
     def layout_buttons(self):
         for i, button in enumerate(self.buttons_list):
             button.x = self.icons_list[i].sprite.x
-            button.y = self.icons_list[i].sprite.y + self.icons_list[i].sprite.h - button.h // 2
+            button.y = self.icons_list[i].sprite.y + self.icons_list[i].sprite.h
             button.origin_x = button.x
             button.origin_y = button.y
             button.origin_w = button.w
@@ -800,7 +813,7 @@ class Icon:
         self.coordinator = coordinator
         self.sprite = sprite
         self.name = name
-        self.sprite.initialize("icon")
+        self.sprite.initialize()
         self.contents = None
         self.grid = None
         self.show_contents = False
@@ -808,8 +821,10 @@ class Icon:
     def populate_content(self, content: list):
         if not isinstance(content, list):
             return
-        else:
-            self.contents = content
+        for item in content:
+            item.sprite.center_y = 20
+            #item.sprite.center_y = self.coordinator.ui_manager.screen.h // 3 - int(item.sprite.origin_h * self.coordinator.ui_manager.focused_scale) // 2
+        self.contents = content
 
     def setup_grid(self):
         self.grid = Grid()
@@ -840,12 +855,7 @@ class Icon:
                 sprite.render = True
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
-                #self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
                 sprite.depth = sprite.icon.sprite.depth + 1
-                sprite_center_x = sprite.x + sprite.w // 2
-                t_x = sprite_center_x - c.text_surface.get_width() // 2
-                t_y = sprite.y + sprite.h
-                #self.coordinator.ui_manager.pygame.dynamic_canvas.blit(c.text_surface, (t_x, t_y))
             else:
                 sprite.render = False
                 sprite.alpha = 0

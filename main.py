@@ -1,10 +1,8 @@
-from config import ingredients_data, resolution_profiles, flavors_data, icons_data, buttons_data, CONSTANTS
 import cProfile
 from classes import *
 from types import SimpleNamespace
 import pygame
 import sys
-import os
 
 
 pygame.init()
@@ -36,6 +34,7 @@ class Coordinator:
 
     def initialize(self):
         self.create_classes()
+        initialize_ingredients(self)
         self.initialize_classes()
         self.running = True
 
@@ -49,36 +48,8 @@ class Coordinator:
         self.background = Background(self)
 
     def initialize_classes(self):
-        self.initialize_ingredients()
         self.ui_manager.initialize()
         self.background.initialize()
-
-    def initialize_ingredients(self):
-        for name, weight in ingredients_data.items():
-            ingredient = Ingredient(self, name, weight)
-            self.ingredients.append(ingredient)
-
-    def build_flavor_set(self, icon_name) -> list[Flavor]:
-        if icon_name == "reach_in":
-            keys = CONSTANTS.REACH_IN_ORDER
-        elif icon_name == "quick":
-            keys = CONSTANTS.QUICK_ORDER
-        else:
-            keys = CONSTANTS.WALK_IN_ORDER
-        flavors = []
-        sprites = []
-        flavors_by_name = {v.name: v for v in vars(self.data.flavors).values()}
-        for key in keys:
-            attr_value = flavors_by_name.get(key)
-            if not attr_value:
-                continue
-            f = Flavor(self, attr_value, self.ingredients)
-            f.initialize()
-            f.load_sprite(Sprite)
-            sprites.append(f.sprite)
-            flavors.append(f)
-        self.ui_manager.scale_sprites(sprites)
-        return flavors
 
     def main_loop(self):
         while self.running:
@@ -94,8 +65,6 @@ class Coordinator:
             #fps = self.clock.get_fps()
             #print(f"FPS: {fps}")
             self.clock.tick(self.fps)
-
-
 
 
 coordinator = Coordinator()
