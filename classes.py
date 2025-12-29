@@ -62,6 +62,7 @@ class Flavor:
 
     def load_sprite(self, sprite_class):
         self.sprite = sprite_class(self.coordinator, self.name, self.img_name)
+        self.sprite.flavor = self
         self.sprite.initialize(self.img_tag)
 
     def calculate_par_weight(self):
@@ -171,14 +172,21 @@ class DrawManager:
         registry.sort(key=lambda s: getattr(s, "depth", 0))
         for sprite in registry:
             if sprite.render:
+                if sprite.flavor is not None:
+                    self.draw_text_surface(sprite)
                 sprite.draw(self.canvas)
                 sprite.update()
 
 
     def update_canvas(self):
-        self.coordinator.ui_manager.pygame.dynamic_canvas.fill((0, 0, 0, 0))
-        #self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
+
+    def draw_text_surface(self, sprite):
+        sprite_center_x = sprite.x + sprite.w // 2
+        t_x = sprite_center_x - sprite.flavor.text_surface.get_width() // 2
+        t_y = sprite.y + sprite.h
+        self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.flavor.text_surface, (t_x, t_y))
 
     def subscribe_object(self, sprite):
         self.registry.append(sprite)
@@ -201,6 +209,7 @@ class SpriteManager:
 
 class Sprite:
     def __init__(self, coordinator, name, img_name):
+        self.flavor = None
         self.icon = None
         self.origin_depth = None
         self.depth = 0
@@ -247,11 +256,12 @@ class Sprite:
     def center_self(self):
         if not self.idle_focused:
             self.coordinator.event_manager.sprite_transitioning = True
-
             scale_done = self.coordinator.animation_manager.lerp_scale(self, self.focused_scale)
             move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, self.center_y)
 
             if scale_done and move_done:
+                if self.icon is not None:
+                    self.icon.show_contents = True
                 self.coordinator.event_manager.sprite_transitioning = False
                 self.idle_focused = True
                 self.at_home = False
@@ -367,15 +377,33 @@ class EventManager:
                 "finger_up": self.update_dragged_sprite,
                 "finger_motion": self.move_sprite,
             },
-            #"reach_in": {
-            #    "exit": self.exit,
-            #    "mouse_down": self.check_flavor_clicked,
-            #    "mouse_up": self.update_dragged_sprite,
-            #    "mouse_motion": self.move_sprite,
-            #    "finger_down": self.check_flavor_clicked,
-            #    "finger_up": self.update_dragged_sprite,
-            #    "finger_motion": self.move_sprite,
-            #}
+            "reach_in": {
+                "exit": self.exit,
+                "mouse_down": self.check_flavor_clicked,
+                "mouse_up": self.update_dragged_sprite,
+                "mouse_motion": self.move_sprite,
+                "finger_down": self.check_flavor_clicked,
+                "finger_up": self.update_dragged_sprite,
+                "finger_motion": self.move_sprite,
+            },
+            "quick": {
+                "exit": self.exit,
+                "mouse_down": self.check_flavor_clicked,
+                "mouse_up": self.update_dragged_sprite,
+                "mouse_motion": self.move_sprite,
+                "finger_down": self.check_flavor_clicked,
+                "finger_up": self.update_dragged_sprite,
+                "finger_motion": self.move_sprite,
+            },
+            "walk_in": {
+                "exit": self.exit,
+                "mouse_down": self.check_flavor_clicked,
+                "mouse_up": self.update_dragged_sprite,
+                "mouse_motion": self.move_sprite,
+                "finger_down": self.check_flavor_clicked,
+                "finger_up": self.update_dragged_sprite,
+                "finger_motion": self.move_sprite,
+            }
         }
 
     def update(self):
@@ -485,6 +513,8 @@ class EventManager:
             return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
 
     def set_focused_icon(self, sprite):
+        if sprite.moving_home:
+            return
         if self.focused_icon_sprite and self.focused_icon_sprite is not sprite:
             self.focused_icon_sprite.focused = False
             self.focused_icon_sprite.moving_home = True
@@ -493,7 +523,6 @@ class EventManager:
         sprite.focused = True
         sprite.moving_home = False
         sprite.depth = CONSTANTS.FRONT_DEPTH
-        sprite.icon.show_contents = True
         self.focused_icon_sprite = sprite
 
     def unfocus_current_icon(self):
@@ -507,10 +536,12 @@ class EventManager:
         self.focused_icon_sprite = None
 
     def set_focused_flavor(self, sprite):
+        if sprite.moving_home:
+            return
         if self.focused_flavor_sprite and self.focused_flavor_sprite is not sprite:
             self.focused_flavor_sprite.focused = False
             self.focused_flavor_sprite.moving_home = True
-            self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth +1
+            self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth + 1
         sprite.focused = True
         sprite.moving_home = False
         sprite.depth = sprite.icon.sprite.depth + 2
@@ -518,12 +549,18 @@ class EventManager:
 
     def unfocus_current_flavor(self):
         if not self.focused_flavor_sprite:
-            print("No icon to unfocus")
+            self.reset_to_main()
+            print("No flavor to unfocus")
             return
         self.focused_flavor_sprite.focused = False
         self.focused_flavor_sprite.moving_home = True
         self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth + 1
         self.focused_flavor_sprite = None
+
+    def reset_to_main(self):
+        self.unfocus_current_icon()
+        self.active_state = self.state_dict["main"]
+        self.state = "main"
 
     def move_sprite(self):
         if self.dragged_sprite:
@@ -564,8 +601,7 @@ class UiManager:
         self.screen.dimensions = (self.screen.w, self.screen.h)
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions).convert()
-        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions, pygame.SRCALPHA).convert_alpha()
-        #self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
+        self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.pygame.dynamic_canvas.set_colorkey(CONSTANTS.TRANSPARENT)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
@@ -808,12 +844,12 @@ class Icon:
                 sprite.render = True
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
-                self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
+                #self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
                 sprite.depth = sprite.icon.sprite.depth + 1
                 sprite_center_x = sprite.x + sprite.w // 2
                 t_x = sprite_center_x - c.text_surface.get_width() // 2
                 t_y = sprite.y + sprite.h
-                self.coordinator.ui_manager.pygame.dynamic_canvas.blit(c.text_surface, (t_x, t_y))
+                #self.coordinator.ui_manager.pygame.dynamic_canvas.blit(c.text_surface, (t_x, t_y))
             else:
                 sprite.render = False
                 sprite.alpha = 0
