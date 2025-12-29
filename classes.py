@@ -397,17 +397,21 @@ class EventManager:
         }
 
     def update(self):
-        now = pygame.time.get_ticks()
-        if self.event.type in (pygame.FINGERDOWN, pygame.FINGERUP):
-            self.delay_timer = now + 80
-        if now < self.delay_timer and self.event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+        if self.delay():
             return
-        
         self.retrieve_pos()
         self.check_state()
         self.check_event()
         self.execute_event()
         self.active_event = None
+
+    def delay(self):
+        now = pygame.time.get_ticks()
+        if self.event.type in (pygame.FINGERDOWN, pygame.FINGERMOTION, pygame.FINGERUP):
+            self.delay_timer = now + 1
+        if now < self.delay_timer:
+            return True
+        return False
 
     def retrieve_pos(self):
         if self.event is not None:
@@ -439,7 +443,8 @@ class EventManager:
     def execute_event(self):
         if self.active_event is not None:
             self.active_event()
-            self.active_event = None
+        self.active_event = None
+
     def exit(self):
         self.coordinator.running = False
 
