@@ -18,7 +18,11 @@ class Ingredient:
 
 class Flavor:
     def __init__(self, coordinator, flavor_data, ingredients_data):
-        #Reference
+        self.depth = 0
+        self.origin_y = 0
+        self.origin_x = 0
+        self.center_y = 0
+        self.center_x = 0
         self.coordinator = coordinator
         self.data = SimpleNamespace(flavor=flavor_data, ingredients=ingredients_data)
         self.tag = None
@@ -27,6 +31,7 @@ class Flavor:
         self.img_name = None
         self.sprite = None
         self.name = None
+        self.text_surface = None
         #For production
         self.large_quick_par = 0
         self.small_quick_par = 0
@@ -45,6 +50,7 @@ class Flavor:
     def initialize(self):
         self.img_name = self.data.flavor.img_name
         self.name = self.data.flavor.name
+        self.text_surface = self.coordinator.ui_manager.font.render(self.name, True, (0,0,0))
         self.store_ingredients()
 
     def store_ingredients(self):
@@ -56,9 +62,7 @@ class Flavor:
 
     def load_sprite(self, sprite_class):
         self.sprite = sprite_class(self.coordinator, self.name, self.img_name)
-        self.sprite.depth = CONSTANTS.FLAVOR_DEPTH
         self.sprite.initialize(self.img_tag)
-
 
     def calculate_par_weight(self):
         self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
@@ -166,16 +170,13 @@ class DrawManager:
         registry = registry if registry is not None else self.registry
         registry.sort(key=lambda s: getattr(s, "depth", 0))
         for sprite in registry:
-            if isinstance(sprite, list):
-                self.draw_registry(sprite)
-            elif validate_draw(sprite):
-                if sprite.img_tag != "flavor":
-                    sprite.draw(self.canvas)
-                    sprite.update()
+            if sprite.render:
+                sprite.draw(self.canvas)
+                sprite.update()
 
 
     def update_canvas(self):
-        self.coordinator.ui_manager.pygame.dynamic_canvas.fill(self.coordinator.ui_manager.TRANSPARENT)
+        self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
 
     def subscribe_object(self, sprite):
@@ -254,13 +255,8 @@ class Sprite:
                 self.idle_focused = True
                 self.at_home = False
                 self.moving_home = False
-                if self.icon is not None:
-                    self.icon.show_contents = True
 
     def return_home(self):
-        if self.icon is not None:
-            self.icon.show_contents = False
-
         scale_done = self.coordinator.animation_manager.lerp_scale(self, 1)
         move_done = self.coordinator.animation_manager.lerp_move(self, self.origin_x, self.origin_y)
 
@@ -269,7 +265,6 @@ class Sprite:
             self.idle_focused = False
             self.at_home = True
             self.moving_home = False
-
 
     def draw(self, canvas):
         canvas.blit(self.surface, (self.x, self.y))
@@ -353,26 +348,40 @@ class EventManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
         self.dragged_sprite = None
-        self.focused_sprite = None
+        self.focused_icon_sprite = None
+        self.focused_flavor_sprite = None
         self.sprite_transitioning = False
         self.state = "main"
+        self.active_state = None
         self.event = None
         self.active_event = None
         self.event_pos = SimpleNamespace(x=0,y=0)
-        self.event_dict = {
-            "exit": self.exit,
-            "mouse_down": self.check_icon_clicked,
-            "mouse_up": self.update_dragged_sprite,
-            "mouse_motion": self.move_sprite,
-            "finger_down": self.check_icon_clicked,
-            "finger_up": self.update_dragged_sprite,
-            "finger_motion": self.move_sprite,
+        self.state_dict = {
+            "main": {
+                "exit": self.exit,
+                "mouse_down": self.check_icon_clicked,
+                "mouse_up": self.update_dragged_sprite,
+                "mouse_motion": self.move_sprite,
+                "finger_down": self.check_icon_clicked,
+                "finger_up": self.update_dragged_sprite,
+                "finger_motion": self.move_sprite,
+            },
+            #"reach_in": {
+            #    "exit": self.exit,
+            #    "mouse_down": self.check_flavor_clicked,
+            #    "mouse_up": self.update_dragged_sprite,
+            #    "mouse_motion": self.move_sprite,
+            #    "finger_down": self.check_flavor_clicked,
+            #    "finger_up": self.update_dragged_sprite,
+            #    "finger_motion": self.move_sprite,
+            #}
         }
 
     def update(self):
         self.retrieve_pos()
+        self.check_state()
         self.check_event()
-        self.handle_event()
+        self.execute_event()
         self.active_event = None
 
     def retrieve_pos(self):
@@ -383,40 +392,45 @@ class EventManager:
                 self.event_pos.x = self.event.x * self.coordinator.ui_manager.screen.w
                 self.event_pos.y = self.event.y * self.coordinator.ui_manager.screen.h
 
+    def check_state(self):
+        if self.state in self.state_dict:
+            self.active_state = self.state_dict[self.state]
+        else:
+            print(f"State {self.state} not found")
+
     def check_event(self):
         if self.event.type == pygame.QUIT:
-            self.active_event = self.event_dict["exit"]
+            self.active_event = self.active_state["exit"]
         elif self.event.type == pygame.KEYDOWN:
             if self.event.key == pygame.K_ESCAPE:
-                self.active_event = self.event_dict["exit"]
+                self.active_event = self.active_state["exit"]
         elif self.event.type == pygame.MOUSEBUTTONDOWN:
-            self.active_event = self.event_dict["mouse_down"]
+            self.active_event = self.active_state["mouse_down"]
         elif self.event.type == pygame.MOUSEMOTION:
-            self.active_event = self.event_dict["mouse_motion"]
+            self.active_event = self.active_state["mouse_motion"]
         elif self.event.type == pygame.MOUSEBUTTONUP:
-            self.active_event = self.event_dict["mouse_up"]
+            self.active_event = self.active_state["mouse_up"]
         elif self.event.type == pygame.FINGERDOWN:
-            self.active_event = self.event_dict["finger_down"]
+            self.active_event = self.active_state["finger_down"]
         elif self.event.type == pygame.FINGERMOTION:
-            self.active_event = self.event_dict["finger_motion"]
+            self.active_event = self.active_state["finger_motion"]
         elif self.event.type == pygame.FINGERUP:
-            self.active_event = self.event_dict["finger_up"]
+            self.active_event = self.active_state["finger_up"]
+
+    def execute_event(self):
+        if self.active_event is not None:
+            self.active_event()
 
     def exit(self):
         self.coordinator.running = False
 
-    def handle_event(self):
-        if self.active_event is not None:
-            self.active_event()
-
     def update_dragged_sprite(self):
-            self.dragged_sprite = None
+        self.dragged_sprite = None
 
     def check_icon_clicked(self):
         if self.sprite_transitioning:
             return
-
-        if self.focused_sprite and self.point_in_sprite(self.focused_sprite):
+        if self.focused_icon_sprite and self.point_in_sprite(self.focused_icon_sprite):
             return
 
         hits = []
@@ -428,7 +442,7 @@ class EventManager:
             if self.point_in_sprite(s):
                 hits.append(s)
         if not hits:
-            self.unfocus_current()
+            self.unfocus_current_icon()
             return
 
         def z_keys(s):
@@ -436,31 +450,79 @@ class EventManager:
 
         clicked = max(hits, key=z_keys)
 
-        self.set_focused_sprite(clicked)
+        self.set_focused_icon(clicked)
         if clicked.state_tag is not None:
-            self.coordinator.state_manager.state = clicked.state_tag
+            print(f"State: {clicked.state_tag}")
+            self.state = clicked.state_tag
+
+    def check_flavor_clicked(self):
+        if self.sprite_transitioning:
+            return
+        if self.focused_flavor_sprite and self.point_in_sprite(self.focused_flavor_sprite):
+            return
+        hits = []
+        for s in self.coordinator.draw_manager.registry:
+            if not isinstance(s, Sprite):
+                continue
+            if s.img_tag != "flavor" or s.render == False:
+                continue
+            if self.point_in_sprite(s):
+                hits.append(s)
+        if not hits:
+            print("No flavor found")
+            self.unfocus_current_flavor()
+            return
+
+        def z_keys(s):
+            return s.depth, self.coordinator.draw_manager.registry.index(s)
+
+        clicked = max(hits, key=z_keys)
+        self.set_focused_flavor(clicked)
+        print(f"Focused flavor was set to {clicked.name}")
 
     def point_in_sprite(self, s,):
             return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
 
-    def set_focused_sprite(self, sprite):
-        if self.focused_sprite and self.focused_sprite is not sprite:
-            self.focused_sprite.focused = False
-            self.focused_sprite.moving_home = True
-            self.focused_sprite.depth = self.focused_sprite.origin_depth
-        self.focused_sprite = sprite
+    def set_focused_icon(self, sprite):
+        if self.focused_icon_sprite and self.focused_icon_sprite is not sprite:
+            self.focused_icon_sprite.focused = False
+            self.focused_icon_sprite.moving_home = True
+            self.focused_icon_sprite.depth = self.focused_icon_sprite.origin_depth
+            self.focused_icon_sprite.icon.show_contents = False
         sprite.focused = True
         sprite.moving_home = False
         sprite.depth = CONSTANTS.FRONT_DEPTH
+        sprite.icon.show_contents = True
+        self.focused_icon_sprite = sprite
 
-    def unfocus_current(self):
-        if not self.focused_sprite:
-            print("No sprite to unfocus")
+    def unfocus_current_icon(self):
+        if not self.focused_icon_sprite:
+            print("No icon to unfocus")
             return
-        self.focused_sprite.focused = False
-        self.focused_sprite.moving_home = True
-        self.focused_sprite.depth = self.focused_sprite.origin_depth
-        self.focused_sprite = None
+        self.focused_icon_sprite.focused = False
+        self.focused_icon_sprite.moving_home = True
+        self.focused_icon_sprite.depth = self.focused_icon_sprite.origin_depth
+        self.focused_icon_sprite.icon.show_contents = False
+        self.focused_icon_sprite = None
+
+    def set_focused_flavor(self, sprite):
+        if self.focused_flavor_sprite and self.focused_flavor_sprite is not sprite:
+            self.focused_flavor_sprite.focused = False
+            self.focused_flavor_sprite.moving_home = True
+            self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth +1
+        sprite.focused = True
+        sprite.moving_home = False
+        sprite.depth = sprite.icon.sprite.depth + 2
+        self.focused_flavor_sprite = sprite
+
+    def unfocus_current_flavor(self):
+        if not self.focused_flavor_sprite:
+            print("No icon to unfocus")
+            return
+        self.focused_flavor_sprite.focused = False
+        self.focused_flavor_sprite.moving_home = True
+        self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth + 1
+        self.focused_flavor_sprite = None
 
     def move_sprite(self):
         if self.dragged_sprite:
@@ -485,7 +547,6 @@ class UiManager:
         self.center = SimpleNamespace(x=0, y=0)
 
         self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None)
-        self.TRANSPARENT = (255, 0, 255)
         self.font = None
 
         self.focused_sprite = None
@@ -503,17 +564,16 @@ class UiManager:
         self.pygame.screen = pygame.display.set_mode(self.screen.dimensions)
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
-        self.TRANSPARENT = (255, 0, 255)
-        self.pygame.dynamic_canvas.set_colorkey(self.TRANSPARENT)
+        self.pygame.dynamic_canvas.set_colorkey(CONSTANTS.TRANSPARENT)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
+        self.font = pygame.font.Font(None, int(self.scale.font))
         self.populate_icon_list()
         self.populate_button_list()
         self.scale_sprites()
         self.layout_icons()
         self.layout_buttons()
         self.setup_icon_grids()
-        self.font = pygame.font.Font(None, int(self.scale.font))
 
     def adjust_resolution(self):
         self.retrieve_resolution_data()
@@ -541,7 +601,8 @@ class UiManager:
         for key in ordered_keys:
             data = getattr(self.icons_data, key)
             icon_sprite = Sprite(self.coordinator, data.name, data.image_name)
-            icon = Icon(self.coordinator, icon_sprite)
+            icon_sprite.state_tag = key
+            icon = Icon(self.coordinator, icon_sprite, key)
             icon.populate_content(self.coordinator.build_flavor_set(key))
             icon_sprite.icon = icon
             self.icons_list.append(icon)
@@ -576,10 +637,7 @@ class UiManager:
                 sprite.scale(w, h)
 
     def assign_depth(self, sprite):
-        if sprite.img_tag == "flavor":
-            sprite.depth = CONSTANTS.FLAVOR_DEPTH
-            sprite.origin_depth = CONSTANTS.FLAVOR_DEPTH
-        elif sprite.img_tag == "button":
+        if sprite.img_tag == "button":
             sprite.depth = CONSTANTS.BUTTON_DEPTH
             sprite.origin_depth = CONSTANTS.BUTTON_DEPTH
         elif sprite.img_tag == "icon":
@@ -601,7 +659,6 @@ class UiManager:
 
     def layout_icons(self):
         if self.screen.short_axis == "height":
-            print("Height is short")
             cell_size = self.coordinator.ui_manager.screen.w // self.num_cells
             for i, icon in enumerate(self.icons_list):
                 icon.sprite.x = i * cell_size + cell_size // 2 - icon.sprite.w // 2
@@ -638,51 +695,6 @@ class UiManager:
         for r in range(rows):
             y = r * 30
             pygame.draw.line(self.pygame.screen, (255, 255, 255), (0, y), (self.screen.w, y))
-
-
-class StateManager:
-    def __init__(self, coordinator):
-        self.coordinator = coordinator
-        self.state = "main"
-
-    def update(self):
-        self.check_state()
-
-    def check_state(self):
-        if self.state == "main":
-            _true = True
-            # print("main")
-        elif self.state == "reach_in":
-            _true = True
-            # print("reach_in")
-        elif self.state == "walk_in":
-            _true = True
-            # print("walk_in")
-        elif self.state == "quick":
-            _true = True
-            # print("quick")
-        elif self.state == "production":
-            _true = True
-            # print("production")
-
-    def state_main(self):
-        c = True
-
-
-    def state_walk_in(self):
-        c = True
-
-
-    def state_reach_in(self):
-        c = True
-
-
-    def state_quick(self):
-        c = True
-
-
-    def state_production(self):
-        c = True
 
 
 class Background:
@@ -749,9 +761,11 @@ class NineSlice:
         return surface
 
 class Icon:
-    def __init__(self, coordinator, sprite):
+    def __init__(self, coordinator, sprite, name):
+        depth = 0
         self.coordinator = coordinator
         self.sprite = sprite
+        self.name = name
         self.sprite.initialize("icon")
         self.contents = None
         self.grid = None
@@ -775,6 +789,7 @@ class Icon:
 
     def position_content(self):
         for i, c in enumerate(self.contents):
+            c.sprite.icon = self
             c.sprite.alpha = 0
             c.sprite.surface.set_alpha(0)
             row = i // self.grid.cols
@@ -788,15 +803,17 @@ class Icon:
         for c in self.contents:
             sprite = c.sprite
             if self.show_contents:
+                sprite.render = True
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
                 self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.surface, (sprite.x, sprite.y))
-                text_surface = self.coordinator.ui_manager.font.render(sprite.name, True, (0,0,0))
+                sprite.depth = sprite.icon.sprite.depth + 1
                 sprite_center_x = sprite.x + sprite.w // 2
-                t_x = sprite_center_x - text_surface.get_width() // 2
+                t_x = sprite_center_x - c.text_surface.get_width() // 2
                 t_y = sprite.y + sprite.h
-                self.coordinator.ui_manager.pygame.dynamic_canvas.blit(text_surface, (t_x, t_y))
+                self.coordinator.ui_manager.pygame.dynamic_canvas.blit(c.text_surface, (t_x, t_y))
             else:
+                sprite.render = False
                 sprite.alpha = 0
                 sprite.surface.set_alpha(sprite.alpha)
 

@@ -5,14 +5,13 @@ CONSTANTS = SimpleNamespace()
 CONSTANTS.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONSTANTS.IMAGE_DIR = os.path.join(CONSTANTS.SCRIPT_DIR, "images")
 CONSTANTS.FRONT_DEPTH = 10000
-CONSTANTS.FLAVOR_DEPTH = 3000
 CONSTANTS.BUTTON_DEPTH = 2000
 CONSTANTS.ICON_DEPTH = 1000
 CONSTANTS.BACKGROUND_DEPTH = -1000
 CONSTANTS.REACH_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
 CONSTANTS.QUICK_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
 CONSTANTS.WALK_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
-
+CONSTANTS.TRANSPARENT = (255, 0, 255)
 
 ingredients_data = {
     "Cranberries": .28,
@@ -71,9 +70,9 @@ flavors_data = SimpleNamespace(
 
 
 icons_data =  SimpleNamespace(
-            reach_in=SimpleNamespace(name="reach_in",image_name="icon_reach_in.png"),
-            quick=SimpleNamespace(name="quick", image_name="icon_quick_test.png"),
-            walk_in=SimpleNamespace(name="walk_in", image_name="icon_walk_in.png"),
+            reach_in=SimpleNamespace(name="reach_in",image_name="icon_reach_in.png", state_tag="reach_in"),
+            quick=SimpleNamespace(name="quick", image_name="icon_quick_test.png", state_tag="walk_in"),
+            walk_in=SimpleNamespace(name="walk_in", image_name="icon_walk_in.png", state_tag="quick"),
 )
 
 

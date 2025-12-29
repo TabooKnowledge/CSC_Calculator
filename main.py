@@ -45,7 +45,6 @@ class Coordinator:
         self.draw_manager = DrawManager(self)
         self.animation_manager = AnimationManager(self)
         self.event_manager = EventManager(self)
-        self.state_manager = StateManager(self)
         self.ui_manager = UiManager(self)
         self.background = Background(self)
 
@@ -83,7 +82,6 @@ class Coordinator:
 
     def main_loop(self):
         while self.running:
-            self.state_manager.update()
             for e in pygame.event.get():
                 self.event_manager.event = e
                 self.event_manager.update()
@@ -93,8 +91,8 @@ class Coordinator:
             self.ui_manager.draw_canvas()
             #self.draw_grid()
             pygame.display.flip()
-            fps = self.clock.get_fps()
-            print(f"FPS: {fps}")
+            #fps = self.clock.get_fps()
+            #print(f"FPS: {fps}")
             self.clock.tick(self.fps)
 
 
