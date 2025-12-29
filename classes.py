@@ -367,6 +367,7 @@ class EventManager:
         self.event = None
         self.active_event = None
         self.event_pos = SimpleNamespace(x=0,y=0)
+        self.delay_timer = 0
         self.state_dict = {
             "main": {
                 "exit": self.exit,
@@ -396,6 +397,12 @@ class EventManager:
         }
 
     def update(self):
+        now = pygame.time.get_ticks()
+        if self.event.type in (pygame.FINGERDOWN, pygame.FINGERUP):
+            self.delay_timer = now + 80
+        if now < self.delay_timer and self.event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            return
+        
         self.retrieve_pos()
         self.check_state()
         self.check_event()
