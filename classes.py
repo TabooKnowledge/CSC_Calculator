@@ -370,39 +370,28 @@ class EventManager:
         self.state_dict = {
             "main": {
                 "exit": self.exit,
-                "mouse_down": self.check_icon_clicked,
-                "mouse_up": self.update_dragged_sprite,
-                "mouse_motion": self.move_sprite,
-                "finger_down": self.check_icon_clicked,
-                "finger_up": self.update_dragged_sprite,
-                "finger_motion": self.move_sprite,
+                "pointer_down": self.check_icon_clicked,
+                "pointer_up": self.update_dragged_sprite,
+                "pointer_moving": self.move_sprite,
+
             },
             "reach_in": {
                 "exit": self.exit,
-                "mouse_down": self.check_flavor_clicked,
-                "mouse_up": self.update_dragged_sprite,
-                "mouse_motion": self.move_sprite,
-                "finger_down": self.check_flavor_clicked,
-                "finger_up": self.update_dragged_sprite,
-                "finger_motion": self.move_sprite,
+                "pointer_down": self.check_flavor_clicked,
+                "pointer_up": self.update_dragged_sprite,
+                "pointer_moving": self.move_sprite,
             },
             "quick": {
                 "exit": self.exit,
-                "mouse_down": self.check_flavor_clicked,
-                "mouse_up": self.update_dragged_sprite,
-                "mouse_motion": self.move_sprite,
-                "finger_down": self.check_flavor_clicked,
-                "finger_up": self.update_dragged_sprite,
-                "finger_motion": self.move_sprite,
+                "pointer_down": self.check_flavor_clicked,
+                "pointer_up": self.update_dragged_sprite,
+                "pointer_moving": self.move_sprite,
             },
             "walk_in": {
                 "exit": self.exit,
-                "mouse_down": self.check_flavor_clicked,
-                "mouse_up": self.update_dragged_sprite,
-                "mouse_motion": self.move_sprite,
-                "finger_down": self.check_flavor_clicked,
-                "finger_up": self.update_dragged_sprite,
-                "finger_motion": self.move_sprite,
+                "pointer_down": self.check_flavor_clicked,
+                "pointer_up": self.update_dragged_sprite,
+                "pointer_moving": self.move_sprite,
             }
         }
 
@@ -433,23 +422,17 @@ class EventManager:
         elif self.event.type == pygame.KEYDOWN:
             if self.event.key == pygame.K_ESCAPE:
                 self.active_event = self.active_state["exit"]
-        elif self.event.type == pygame.MOUSEBUTTONDOWN:
-            self.active_event = self.active_state["mouse_down"]
-        elif self.event.type == pygame.MOUSEMOTION:
-            self.active_event = self.active_state["mouse_motion"]
-        elif self.event.type == pygame.MOUSEBUTTONUP:
-            self.active_event = self.active_state["mouse_up"]
-        elif self.event.type == pygame.FINGERDOWN:
-            self.active_event = self.active_state["finger_down"]
-        elif self.event.type == pygame.FINGERMOTION:
-            self.active_event = self.active_state["finger_motion"]
-        elif self.event.type == pygame.FINGERUP:
-            self.active_event = self.active_state["finger_up"]
+        elif self.event.type == pygame.MOUSEBUTTONDOWN or self.event.type == pygame.FINGERDOWN:
+            self.active_event = self.active_state["pointer_down"]
+        elif self.event.type == pygame.MOUSEMOTION or self.event.type == pygame.FINGERMOTION:
+            self.active_event = self.active_state["pointer_moving"]
+        elif self.event.type == pygame.MOUSEBUTTONUP or self.event.type == pygame.FINGERUP:
+            self.active_event = self.active_state["pointer_up"]
 
     def execute_event(self):
         if self.active_event is not None:
             self.active_event()
-
+            self.active_event = None
     def exit(self):
         self.coordinator.running = False
 
