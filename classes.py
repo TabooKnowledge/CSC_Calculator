@@ -215,10 +215,10 @@ class DrawManager:
         t_y = sprite.y + sprite.h
         self.coordinator.ui_manager.pygame.dynamic_canvas.blit(sprite.flavor.text_surface, (t_x, t_y))
 
-    def subscribe_object(self, sprite):
+    def subscribe(self, sprite):
         self.registry.append(sprite)
 
-    def unsubscribe_sprite(self, sprite):
+    def unsubscribe(self, sprite):
         for r_sprite in self.registry:
             if r_sprite == sprite:
                 self.registry.remove(sprite)
@@ -271,7 +271,7 @@ class Sprite:
         self.origin_surface = self.surface
         self.w = self.surface.get_width()
         self.h = self.surface.get_height()
-        self.coordinator.draw_manager.subscribe_object(self)
+        self.coordinator.draw_manager.subscribe(self)
 
     def update(self):
         if self.focused and not self.moving_home:
@@ -499,6 +499,13 @@ class EventManager:
             else:
                 self.unfocus_current_flavor()
             return
+        print("registry len", len(self.coordinator.draw_manager.registry))
+        print("unique ids", len({id(s) for s in self.coordinator.draw_manager.registry}))
+
+        print("CLICK POS", self.event_pos.x, self.event_pos.y, "STATE", self.state, "TYPE", _type)
+        for s in self.coordinator.draw_manager.registry:
+            if isinstance(s, Sprite) and self.point_in_sprite(s):
+                print("  under pointer:", s.name, "type:", s.type, "depth:", s.depth)
 
         def z_keys(s):
             return s.depth, self.coordinator.draw_manager.registry.index(s)
@@ -507,6 +514,7 @@ class EventManager:
 
         if _type == "icon":
             self.set_focused_icon(clicked)
+            self.refresh_flavors()
             if clicked.type == "icon":
                 print(f"State set to container_open")
                 self.state = "container_open"
@@ -515,6 +523,18 @@ class EventManager:
 
     def point_in_sprite(self, s,):
             return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
+
+    def refresh_flavors(self):
+        if self.focused_icon_sprite is None:
+            return
+
+        for sprite in list(self.coordinator.draw_manager.registry):
+            if isinstance(sprite, Sprite):
+                if sprite.type == "flavor":
+                    self.coordinator.draw_manager.unsubscribe(sprite)
+
+        for c in self.focused_icon_sprite.icon.contents:
+            self.coordinator.draw_manager.subscribe(c.sprite)
 
     def set_focused_icon(self, sprite):
         if sprite.moving_home:
@@ -665,6 +685,7 @@ class UiManager:
             data = getattr(self.buttons_data, key)
             button = Sprite(self.coordinator, data.name, data.image_name)
             button.type = "button"
+            button.origin_depth = CONSTANTS.BUTTON_DEPTH
             button.initialize()
             self.buttons_list.append(button)
 
@@ -822,8 +843,8 @@ class Icon:
         if not isinstance(content, list):
             return
         for item in content:
-            item.sprite.center_y = 20
-            #item.sprite.center_y = self.coordinator.ui_manager.screen.h // 3 - int(item.sprite.origin_h * self.coordinator.ui_manager.focused_scale) // 2
+            #item.sprite.center_y = 20
+            item.sprite.center_y = self.coordinator.ui_manager.screen.h // 3 - int(item.sprite.origin_h * self.coordinator.ui_manager.focused_scale) // 2
         self.contents = content
 
     def setup_grid(self):
@@ -855,7 +876,7 @@ class Icon:
                 sprite.render = True
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
-                sprite.depth = sprite.icon.sprite.depth + 1
+                sprite.depth = CONSTANTS.FRONT_DEPTH + 1
             else:
                 sprite.render = False
                 sprite.alpha = 0
