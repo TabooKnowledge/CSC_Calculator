@@ -289,12 +289,16 @@ class Sprite:
                 if self.coordinator.ui_manager.active_profile.res_type == "medium":
                     y = self.icon.sprite.y - self.h
                     move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, y)
+                    self.coordinator.event_manger.transition_tag = "flavor"
                 else:
-                    x = self.icon.sprite.x - self.w
+                    x = self.coordinator.ui_manager.details_window.x - self.coordinator.ui_manager.details_window.max_w
+                    x = x - self.coordinator.ui_manager.details_window.max_w
                     y = self.icon.sprite.y
                     move_done = self.coordinator.animation_manager.lerp_move(self, x, y)
+                    self.coordinator.event_manager.transition_tag = "flavor"
             else:
                 move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, self.center_y)
+                self.coordinator.event_manager.transition_tag = "icon"
 
             if scale_done and move_done:
                 if self.icon is not None:
@@ -303,6 +307,7 @@ class Sprite:
                 self.idle_focused = True
                 self.at_home = False
                 self.moving_home = False
+                self.coordinator.event_manager.transition_tag = None
 
     def return_home(self):
         scale_done = self.coordinator.animation_manager.lerp_scale(self, 1, 1)
@@ -413,6 +418,7 @@ class EventManager:
         self.focused_icon_sprite = None
         self.focused_flavor_sprite = None
         self.sprite_transitioning = False
+        self.transition_tag = None
         self.state = "main"
         self.active_state = None
         self.event = None
@@ -525,13 +531,6 @@ class EventManager:
             else:
                 self.unfocus_current_flavor()
             return
-        print("registry len", len(self.coordinator.draw_manager.registry))
-        print("unique ids", len({id(s) for s in self.coordinator.draw_manager.registry}))
-
-        print("CLICK POS", self.event_pos.x, self.event_pos.y, "STATE", self.state, "TYPE", _type)
-        for s in self.coordinator.draw_manager.registry:
-            if isinstance(s, Sprite) and self.point_in_sprite(s):
-                print("  under pointer:", s.name, "type:", s.type, "depth:", s.depth)
 
         def z_keys(s):
             return s.depth, self.coordinator.draw_manager.registry.index(s)
@@ -649,11 +648,11 @@ class UiManager:
 
         self.details_window = SimpleNamespace(name="details_window", img_name="details_window.png", w=0, max_w=0,
                                               min_w=0, h=0, max_h=0, min_h=0, x=0, y=0, thickness=8, sprite=None,
-                                              scale=.5, last_size=0, active=False)
+                                              scale=.55, last_size=0, active=False)
 
     def update(self):
         if self.details_window.active:
-            if not self.coordinator.event_manager.sprite_transitioning:
+            if self.coordinator.event_manager.transition_tag != "icon":
                 self.details_window.sprite.render = True
                 self.unroll_details_window()
         else:
@@ -956,7 +955,6 @@ class Icon:
         if not isinstance(content, list):
             return
         for item in content:
-            #item.sprite.center_y = 20
             item.sprite.center_y = self.coordinator.ui_manager.screen.h // 3 - int(item.sprite.origin_h * self.coordinator.ui_manager.focused_scale) // 2
         self.contents = content
 
@@ -978,7 +976,7 @@ class Icon:
             row = i // self.grid.cols
             col = i % self.grid.cols
             c.sprite.x, c.sprite.y = self.grid.cells[row][col]
-            c.sprite.x = c.sprite.x  +self.grid.cell_width // 2 - c.sprite.w // 2
+            c.sprite.x = c.sprite.x + self.grid.cell_width // 2 - c.sprite.w // 2
             c.sprite.y = c.sprite.y + self.grid.cell_height // 2 - c.sprite.h // 2
             c.sprite.origin_x, c.sprite.origin_y = c.sprite.x, c.sprite.y
 
