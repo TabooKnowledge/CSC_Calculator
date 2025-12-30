@@ -483,8 +483,10 @@ class EventManager:
         if self.active_event is not None:
             if self.state == "main":
                 self.active_event(type="icon")
+                self.coordinator.ui_manager.details_window.active = False
             elif self.state == "container_open":
                 self.active_event(type="flavor")
+                self.coordinator.ui_manager.details_window.active = True
         self.active_event = None
 
     def exit(self, *args, **kwargs):
@@ -647,7 +649,17 @@ class UiManager:
 
         self.details_window = SimpleNamespace(name="details_window", img_name="details_window.png", w=0, max_w=0,
                                               min_w=0, h=0, max_h=0, min_h=0, x=0, y=0, thickness=8, sprite=None,
-                                              scale=.5, last_size=0)
+                                              scale=.5, last_size=0, active=False)
+
+    def update(self):
+        if self.details_window.active:
+            if not self.coordinator.event_manager.sprite_transitioning:
+                self.details_window.sprite.render = True
+                self.unroll_details_window()
+        else:
+            self.reset_details_window()
+        self.draw_icons()
+        self.draw_canvas()
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
@@ -755,6 +767,7 @@ class UiManager:
         self.details_window.sprite.initialize()
         self.details_window.sprite.w = self.details_window.w
         self.details_window.sprite.h = self.details_window.h
+        self.details_window.sprite.render = False
         self.details_window.min_w = self.details_window.thickness * 2
         self.details_window.min_h = self.details_window.thickness * 2
         self.details_window.sprite.x = self.details_window.x
@@ -772,7 +785,7 @@ class UiManager:
                 self.details_window.sprite.h, self.details_window.max_h)
 
             self.details_window.sprite.h = new_h
-            self.details_window.sprite.y = int(old_y + (old_h - new_h))
+            self.details_window.sprite.y = old_y + (old_h - new_h)
         else:
             old_w = self.details_window.sprite.w
             old_x = self.details_window.sprite.x
@@ -781,7 +794,7 @@ class UiManager:
                 old_w, self.details_window.max_w)
 
             self.details_window.sprite.w = new_w
-            self.details_window.sprite.x = int(old_x + (old_w - new_w))
+            self.details_window.sprite.x = old_x + (old_w - new_w)
 
         w = max(int(self.details_window.sprite.w), self.details_window.min_w)
         h = max(int(self.details_window.sprite.h), self.details_window.min_h)
@@ -793,6 +806,13 @@ class UiManager:
             self.details_window.last_size = size
         else:
             print("Size match")
+
+    def reset_details_window(self):
+        self.details_window.sprite.render = False
+        self.details_window.sprite.w = self.details_window.w
+        self.details_window.sprite.h = self.details_window.h
+        self.details_window.sprite.x = self.details_window.x
+        self.details_window.sprite.y = self.details_window.y
 
     @staticmethod
     def assign_depth(sprite):
