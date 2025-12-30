@@ -647,7 +647,7 @@ class UiManager:
 
         self.details_window = SimpleNamespace(name="details_window", img_name="details_window.png", w=0, max_w=0,
                                               min_w=0, h=0, max_h=0, min_h=0, x=0, y=0, thickness=8, sprite=None,
-                                              scale=.5)
+                                              scale=.5, last_size=0)
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
@@ -786,8 +786,11 @@ class UiManager:
         w = max(int(self.details_window.sprite.w), self.details_window.min_w)
         h = max(int(self.details_window.sprite.h), self.details_window.min_h)
 
-        self.details_window.sprite.surface = NineSlice(
-            self.details_window.sprite.surface, self.details_window.thickness).render(w, h)
+        size = (w, h)
+        if size != getattr(self.details_window, "last_size", None):
+            self.details_window.sprite.surface = NineSlice(
+                self.details_window.sprite.surface, self.details_window.thickness).render(w, h)
+            self.details_window.last_size = size
 
     @staticmethod
     def assign_depth(sprite):
