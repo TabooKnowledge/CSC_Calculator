@@ -56,6 +56,9 @@ class Coordinator:
             for e in pygame.event.get():
                 self.event_manager.event = e
                 self.event_manager.update()
+                if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_SPACE:
+                        self.ui_manager.unroll_details_window()
             self.ui_manager.update_screen()
             self.draw_manager.draw_registry()
             self.ui_manager.draw_icons()

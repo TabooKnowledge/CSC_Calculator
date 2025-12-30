@@ -32,11 +32,13 @@ class Flavor:
         self.data = SimpleNamespace(flavor=flavor_data, ingredients=ingredients_data)
         self.tag = None
         self.type = "flavor_class"
+        self.show_details = False
         #Visuals
         self.img_name = None
         self.sprite = None
         self.name = None
         self.text_surface = None
+        self.details_window = None
         #For production
         self.large_quick_par = 0
         self.small_quick_par = 0
@@ -282,7 +284,7 @@ class Sprite:
     def center_self(self):
         if not self.idle_focused:
             self.coordinator.event_manager.sprite_transitioning = True
-            scale_done = self.coordinator.animation_manager.lerp_scale(self, self.focused_scale)
+            scale_done = self.coordinator.animation_manager.lerp_scale(self, self.focused_scale, self.focused_scale)
             if self.type == "flavor":
                 if self.coordinator.ui_manager.active_profile.res_type == "medium":
                     y = self.icon.sprite.y - self.h
@@ -303,7 +305,7 @@ class Sprite:
                 self.moving_home = False
 
     def return_home(self):
-        scale_done = self.coordinator.animation_manager.lerp_scale(self, 1)
+        scale_done = self.coordinator.animation_manager.lerp_scale(self, 1, 1)
         move_done = self.coordinator.animation_manager.lerp_move(self, self.origin_x, self.origin_y)
 
         if scale_done and move_done:
@@ -324,8 +326,19 @@ class Sprite:
 class AnimationManager:
     def __init__(self, coordinator):
         self.coordinator = coordinator
-        self.lerp_speed = SimpleNamespace(move=.075, scale=.1, alpha=.1)
+        self.lerp_speed = SimpleNamespace(value=.075, move=.075, scale=.1, alpha=.1)
         self.active_animations = []
+
+    def lerp_value(self, value, target):
+        lerp_speed = self.lerp_speed.value
+
+        delta = target - value
+
+        if delta < 5:
+            return target
+
+        value += delta * lerp_speed
+        return value
 
     def lerp_move(self, sprite, target_x, target_y):
         lerp_speed = self.lerp_speed.move
@@ -335,8 +348,10 @@ class AnimationManager:
 
         dx = target_x - sprite.x
         dy = target_y - sprite.y
+
         remaining_distance = (dx**2 + dy**2)**0.5
         total_distance = (total_dx ** 2 + total_dy ** 2) ** 0.5
+
         if remaining_distance < 5:
             sprite.x = target_x
             sprite.y = target_y
@@ -350,10 +365,10 @@ class AnimationManager:
         sprite.y += dy * lerp_speed
         return False
 
-    def lerp_scale(self, sprite, scale):
+    def lerp_scale(self, sprite, scale_x, scale_y):
         lerp_speed = self.lerp_speed.scale
-        target_w = sprite.origin_w * scale
-        target_h = sprite.origin_h * scale
+        target_w = sprite.origin_w * scale_x
+        target_h = sprite.origin_h * scale_y
 
         dw = target_w - sprite.w
         dh = target_h - sprite.h
@@ -630,6 +645,10 @@ class UiManager:
         self.num_cells = 3
         self.cell_size = None
 
+        self.details_window = SimpleNamespace(name="details_window", img_name="details_window.png", w=0, max_w=0,
+                                              min_w=0, h=0, max_h=0, min_h=0, x=0, y=0, thickness=8, sprite=None,
+                                              scale=.5)
+
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
         self.screen.w = self.screen.display_info.current_w
@@ -646,6 +665,7 @@ class UiManager:
         self.populate_icon_list()
         self.populate_button_list()
         self.scale_sprites()
+        self.create_details_window()
         self.layout_icons()
         self.layout_buttons()
         self.setup_icon_grids()
@@ -711,6 +731,63 @@ class UiManager:
                 sprite.center_x = self.coordinator.ui_manager.screen.w // 2 - int(sprite.origin_w * self.focused_scale) // 2
                 sprite.center_y = self.coordinator.ui_manager.screen.h // 2 - int(sprite.origin_h * self.focused_scale) // 2
                 sprite.scale(w, h)
+                if sprite.type == "icon" and self.details_window.x == 0:
+                    self.initialize_details_window(sprite)
+
+    def initialize_details_window(self, sprite):
+        focused_icon_h = sprite.h * self.focused_scale * self.details_window.scale
+        focused_icon_w = sprite.w * self.focused_scale * self.details_window.scale
+        if self.coordinator.ui_manager.active_profile.res_type == "medium":
+            self.details_window.w = sprite.w * self.focused_scale
+            self.details_window.h = self.details_window.thickness * 2
+            self.details_window.max_h = focused_icon_h
+            self.details_window.x = sprite.center_x
+            self.details_window.y = sprite.center_y
+        else:
+            self.details_window.w = self.details_window.thickness * 2
+            self.details_window.h = sprite.h * self.focused_scale
+            self.details_window.max_w = focused_icon_w
+            self.details_window.x = sprite.center_x
+            self.details_window.y = sprite.center_y
+
+    def create_details_window(self):
+        self.details_window.sprite = Sprite(self.coordinator, "details_window", self.details_window.img_name)
+        self.details_window.sprite.initialize()
+        self.details_window.sprite.w = self.details_window.w
+        self.details_window.sprite.h = self.details_window.h
+        self.details_window.min_w = self.details_window.thickness * 2
+        self.details_window.min_h = self.details_window.thickness * 2
+        self.details_window.sprite.x = self.details_window.x
+        self.details_window.sprite.y = self.details_window.y
+        self.details_window.sprite.type = "details_window"
+        self.details_window.sprite.origin_depth = CONSTANTS.FRONT_DEPTH + 1
+        self.details_window.sprite.depth = self.details_window.sprite.origin_depth
+
+    def unroll_details_window(self):
+        if self.active_profile.res_type == "medium":
+            old_h = self.details_window.sprite.h
+            old_y = self.details_window.sprite.y
+
+            new_h = self.coordinator.animation_manager.lerp_value(
+                self.details_window.sprite.h, self.details_window.max_h)
+
+            self.details_window.sprite.h = new_h
+            self.details_window.sprite.y = int(old_y + (old_h - new_h))
+        else:
+            old_w = self.details_window.sprite.w
+            old_x = self.details_window.sprite.x
+
+            new_w = self.coordinator.animation_manager.lerp_value(
+                old_w, self.details_window.max_w)
+
+            self.details_window.sprite.w = new_w
+            self.details_window.sprite.x = int(old_x + (old_w - new_w))
+
+        w = max(int(self.details_window.sprite.w), self.details_window.min_w)
+        h = max(int(self.details_window.sprite.h), self.details_window.min_h)
+
+        self.details_window.sprite.surface = NineSlice(
+            self.details_window.sprite.surface, self.details_window.thickness).render(w, h)
 
     @staticmethod
     def assign_depth(sprite):
@@ -815,7 +892,7 @@ class NineSlice:
         self.center = self.source.subsurface(self.t, self.t, self.w - 2*self.t, self.h - 2*self.t).copy()
 
     def render(self, target_w, target_h):
-        surface = pygame.Surface((target_w, target_h), pygame.SRCALPHA)
+        surface = pygame.Surface((target_w, target_h), pygame.SRCALPHA).convert_alpha()
 
         surface.blit(self.top_left, (0, 0))
         surface.blit(self.top_right, (target_w - self.t, 0))
