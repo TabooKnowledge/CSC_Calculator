@@ -283,7 +283,16 @@ class Sprite:
         if not self.idle_focused:
             self.coordinator.event_manager.sprite_transitioning = True
             scale_done = self.coordinator.animation_manager.lerp_scale(self, self.focused_scale)
-            move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, self.center_y)
+            if self.type == "flavor":
+                if self.coordinator.ui_manager.active_profile.res_type == "medium":
+                    y = self.icon.sprite.y - self.h
+                    move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, y)
+                else:
+                    x = self.icon.sprite.x - self.w
+                    y = self.icon.sprite.y
+                    move_done = self.coordinator.animation_manager.lerp_move(self, x, y)
+            else:
+                move_done = self.coordinator.animation_manager.lerp_move(self, self.center_x, self.center_y)
 
             if scale_done and move_done:
                 if self.icon is not None:
