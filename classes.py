@@ -791,6 +791,8 @@ class UiManager:
             self.details_window.sprite.surface = NineSlice(
                 self.details_window.sprite.surface, self.details_window.thickness).render(w, h)
             self.details_window.last_size = size
+        else:
+            print("Size match")
 
     @staticmethod
     def assign_depth(sprite):
@@ -895,7 +897,9 @@ class NineSlice:
         self.center = self.source.subsurface(self.t, self.t, self.w - 2*self.t, self.h - 2*self.t).copy()
 
     def render(self, target_w, target_h):
-        surface = pygame.Surface((target_w, target_h), pygame.SRCALPHA).convert_alpha()
+        surface = pygame.Surface((target_w, target_h)).convert()
+        surface.set_colorkey(CONSTANTS.TRANSPARENT)
+        surface.fill(CONSTANTS.TRANSPARENT)
 
         surface.blit(self.top_left, (0, 0))
         surface.blit(self.top_right, (target_w - self.t, 0))
