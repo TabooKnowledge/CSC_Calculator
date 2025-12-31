@@ -1,8 +1,9 @@
-import cProfile
-from classes import *
-from types import SimpleNamespace
 import pygame
 import sys
+from config import *
+from domain import initialize_ingredients, PrepSheet
+from ui import DrawManager, Background
+from engine import EventManager, AnimationManager, UiManager
 
 
 pygame.init()
@@ -39,7 +40,6 @@ class Coordinator:
         self.running = True
 
     def create_classes(self):
-        self.sprite_manager = SpriteManager(self)
         self.prep_sheet = PrepSheet(self)
         self.draw_manager = DrawManager(self)
         self.animation_manager = AnimationManager(self)
@@ -56,7 +56,7 @@ class Coordinator:
             for e in pygame.event.get():
                 self.event_manager.event = e
                 self.event_manager.update()
-            self.ui_manager.update_screen()
+            self.ui_manager.refresh_screen()
             self.draw_manager.draw_registry()
             #self.ui_manager.unroll_details_window()
             self.ui_manager.update()

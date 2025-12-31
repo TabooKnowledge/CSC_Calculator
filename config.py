@@ -1,6 +1,7 @@
 import os
 from types import SimpleNamespace
 
+
 CONSTANTS = SimpleNamespace()
 CONSTANTS.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONSTANTS.IMAGE_DIR = os.path.join(CONSTANTS.SCRIPT_DIR, "images")
