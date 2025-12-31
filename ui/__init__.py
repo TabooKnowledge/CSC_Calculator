@@ -278,7 +278,7 @@ class DetailsWindow:
                     self.sprite.w, self.min_w, .5)
             else:
                 new_w = self.icon.coordinator.animation_manager.lerp_value(
-                    self.sprite.w, self.max_w)
+                    self.sprite.w, self.max_w, .25)
 
             self.sprite.w = new_w
             self.sprite.x = old_x + (old_w - new_w)

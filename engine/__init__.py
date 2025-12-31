@@ -326,9 +326,22 @@ class UiManager:
         self.num_cells = 3
         self.cell_size = None
 
+    def refresh_screen(self):
+        self.pygame.screen.fill((0, 0, 0))
+
     def update(self):
         self.update_icons()
         self.draw_canvas()
+
+    def draw_canvas(self):
+        self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
+        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
+
+    def update_icons(self):
+        for icon in self.icons_list:
+            icon.toggle_show_contents()
+            if icon.details_window.active:
+                icon.details_window.update()
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
@@ -424,19 +437,6 @@ class UiManager:
         elif sprite.img_tag == "background":
             sprite.depth = CONSTANTS.BACKGROUND_DEPTH
 
-    def refresh_screen(self):
-        self.pygame.screen.fill((0, 0, 0))
-
-    def draw_canvas(self):
-        self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
-        self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
-
-    def update_icons(self):
-        for icon in self.icons_list:
-            icon.toggle_show_contents()
-            if icon.details_window.active:
-                icon.details_window.update()
-
     def layout_icons(self):
         if self.screen.short_axis == "height":
             cell_size = self.coordinator.ui_manager.screen.w // self.num_cells
@@ -451,6 +451,7 @@ class UiManager:
         else:
             cell_size = self.coordinator.ui_manager.screen.h * .65 // self.num_cells
             for i, icon in enumerate(self.icons_list):
+                icon.details_window.init()
                 icon.sprite.x = self.coordinator.ui_manager.screen.w // 2 - icon.sprite.w // 2
                 icon.sprite.y = i * cell_size + cell_size // 2 - icon.sprite.h // 2
                 icon.sprite.origin_x = icon.sprite.x
