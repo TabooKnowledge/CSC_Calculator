@@ -325,13 +325,9 @@ class OutputBox:
         self.font = font
         self.title_surface = self.font.render(self.title,True,(0, 0, 0))
         self.rect = pygame.Rect(0,0,0,0)
-        self.img_name = None
-        self.surface = None
-        self.arrow_img_name = None
-        self.arrow_surface = None
-        self.value = None
-        self.last_value = None
-        self.value_surface = None
+        self.bg = SimpleNamespace(img_name=None, surface=None)
+        self.arrow = SimpleNamespace(img_name=None, surface=None, rect=pygame.Rect(0,0,0,0))
+        self.value = SimpleNamespace(current=None, last=None, surface=None)
 
     def update(self):
         self.update_value_surface()
