@@ -35,7 +35,7 @@ class AnimationManager:
         remaining_distance = (dx**2 + dy**2)**0.5
         total_distance = (total_dx ** 2 + total_dy ** 2) ** 0.5
 
-        if remaining_distance < 5:
+        if remaining_distance < 10:
             sprite.x = target_x
             sprite.y = target_y
             return True
@@ -428,13 +428,13 @@ class UiManager:
 
     @staticmethod
     def assign_depth(sprite):
-        if sprite.img_tag == "button":
+        if sprite.type == "button":
             sprite.depth = CONSTANTS.BUTTON_DEPTH
             sprite.origin_depth = CONSTANTS.BUTTON_DEPTH
-        elif sprite.img_tag == "icon":
+        elif sprite.type == "icon":
             sprite.depth = CONSTANTS.ICON_DEPTH
             sprite.origin_depth = CONSTANTS.ICON_DEPTH
-        elif sprite.img_tag == "background":
+        elif sprite.type == "background":
             sprite.depth = CONSTANTS.BACKGROUND_DEPTH
 
     def layout_icons(self):
@@ -493,7 +493,7 @@ def build_flavor_set(coordinator, icon_name) -> list ["Flavor"]:
         attr_value = flavors_by_name.get(key)
         if not attr_value:
             continue
-        f = Flavor(coordinator, attr_value, coordinator.ingredients)
+        f = Flavor(coordinator, attr_value)
         f.initialize()
         f.load_sprite()
         sprites.append(f.sprite)

@@ -20,7 +20,7 @@ def initialize_ingredients(coordinator):
 
 
 class Flavor:
-    def __init__(self, coordinator, flavor_data, ingredients_data):
+    def __init__(self, coordinator, flavor_data):
         self.depth = 0
         self.origin_y = 0
         self.origin_x = 0
@@ -61,7 +61,7 @@ class Flavor:
     def store_ingredients(self):
         for name in self.data.flavor.ingredients:
             for ingredient in self.data.ingredients:
-                if ingredient.name == name:
+                if ingredient == name:
                     self.ingredients.append(ingredient)
                     break
 

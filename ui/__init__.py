@@ -212,6 +212,8 @@ class DetailsWindow:
         self.last_size = 0
         self.active = False
         self.close = False
+        self.output_box = SimpleNamespace(large_quick=None, small_quick=None, line_pan=None,
+                                          cooked_chicken=None, raw_chicken=None)
 
     def init(self):
         ui_manager = self.icon.coordinator.ui_manager
@@ -246,52 +248,60 @@ class DetailsWindow:
         self.sprite.type = "details_window"
         self.sprite.origin_depth = CONSTANTS.FRONT_DEPTH + 1
         self.sprite.depth = self.sprite.origin_depth
+        self.generate_output_boxes()
+
+    def generate_output_boxes(self):
+        font = self.icon.coordinator.ui_manager.font
+        self.output_box.large_quick = OutputBox(self, "Large Quick", font)
+        self.output_box.small_quick = OutputBox(self, "Small Quick", font)
+        self.output_box.line_pan = OutputBox(self, "Line Pan", font)
+        self.output_box.cooked_chicken = OutputBox(self, "Cooked Chicken", font)
+        self.output_box.raw_chicken = OutputBox(self, "Raw Chicken", font)
 
     def update(self):
         if self.active:
-            if self.icon.sprite.idle_focused:#Icon has finished centering
-                self.sprite.render = True
-                self.roll_window()
+            self.sprite.render = True
+            self.roll_window()
 
     def roll_window(self):
         ui_manager = self.icon.coordinator.ui_manager
 
         if ui_manager.active_profile.res_type == "medium":
-            old_h = self.sprite.h
-            old_y = self.sprite.y
-
             if self.close:
                 new_h = self.icon.coordinator.animation_manager.lerp_value(
-                    self.sprite.h, self.min_h, .08)
+                    self.sprite.h, self.min_h, .2)
             else:
                 new_h = self.icon.coordinator.animation_manager.lerp_value(
-                    self.sprite.h, self.max_h)
+                    self.sprite.h, self.max_h, .25)
 
-            self.sprite.h = new_h
-            self.sprite.y = old_y + (old_h - new_h)
-        else:
-            old_w = self.sprite.w
-            old_x = self.sprite.x
-
-            if self.close:
-                new_w = self.icon.coordinator.animation_manager.lerp_value(
-                    self.sprite.w, self.min_w, .5)
-            else:
-                new_w = self.icon.coordinator.animation_manager.lerp_value(
-                    self.sprite.w, self.max_w, .25)
-
+            new_w = self.icon.sprite.w
+            self.sprite.x = self.icon.sprite.x
+            self.sprite.y = self.icon.sprite.y - new_h
             self.sprite.w = new_w
-            self.sprite.x = old_x + (old_w - new_w)
+            self.sprite.h = new_h
 
+        else:
+            if self.close:
+                new_w = self.icon.coordinator.animation_manager.lerp_value(
+                    self.sprite.w, self.min_w, .2)
+            else:
+                new_w = self.icon.coordinator.animation_manager.lerp_value(
+                    self.sprite.w, self.max_w, .1)
+
+            new_h = self.icon.sprite.h
+            self.sprite.x = self.icon.sprite.x - new_w
+            self.sprite.y = self.icon.sprite.y
+            self.sprite.w = new_w
+            self.sprite.h = new_h
 
         w = max(int(self.sprite.w), self.min_w)
         h = max(int(self.sprite.h), self.min_h)
 
         if w <= self.min_w or h <= self.min_h:
-            print("Window deactivated")
-            self.icon.details_window.active = False
-            self.icon.details_window.close = False
-            self.icon.details_window.reset_window()
+            self.active = False
+            self.close = False
+            self.reset_window()
+            return
 
         size = (w, h)
         if size != getattr(self, "last_size", None):
@@ -306,6 +316,30 @@ class DetailsWindow:
         self.sprite.h = self.h
         self.sprite.x = self.x
         self.sprite.y = self.y
+
+
+class OutputBox:
+    def __init__(self, window, title, font):
+        self.title = title
+        self.window = window
+        self.font = font
+        self.title_surface = self.font.render(self.title,True,(0, 0, 0))
+        self.rect = pygame.Rect(0,0,0,0)
+        self.img_name = None
+        self.surface = None
+        self.arrow_img_name = None
+        self.arrow_surface = None
+        self.value = None
+        self.last_value = None
+        self.value_surface = None
+
+    def update(self):
+        self.update_value_surface()
+        self.update_Surface()
+
+    #def update_value_surface(self):
+
+    #def update_surface(self):
 
 
 class NineSlice:
