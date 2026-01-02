@@ -214,17 +214,16 @@ class DetailsWindow:
         self.last_size = 0
         self.active = False
         self.close = False
-        self.box_surface = None
-        self.output_box = SimpleNamespace(large_quick=None, small_quick=None, line_pan=None,
-                                          cooked_chicken=None, raw_chicken=None)
+        self.output_box = None
 
     def init(self):
         ui_manager = self.icon.coordinator.ui_manager
         sprite = self.icon.sprite
         max_window_w = sprite.w * ui_manager.focused_scale * self.scale
         max_window_h = sprite.h * ui_manager.focused_scale * self.scale
+        res_type = ui_manager.active_profile.res_type
 
-        if ui_manager.active_profile.res_type == "medium":
+        if res_type == "medium":
             self.w = sprite.w * ui_manager.focused_scale
             self.h = self.thickness * 2
             self.max_h = max_window_h
@@ -240,13 +239,7 @@ class DetailsWindow:
         w = int(max(self.w, self.max_w))
         h = int(max(self.h, self.max_h))
 
-        self.init_grid(w, h)
-
-        self.box_surface = pygame.Surface((w, h)).convert()
-        print("box_surface:", self.box_surface.get_size())
-        self.box_surface.set_colorkey(CONSTANTS.TRANSPARENT)
-
-        self.create_window()
+        self.create_window(res_type)
 
     def init_grid(self, w, h):
         cell_w = w // 32
@@ -255,7 +248,7 @@ class DetailsWindow:
         cols = 32
         self.grid.create_grid((0, 0), cell_w, cell_h, rows, cols)
 
-    def create_window(self):
+    def create_window(self, res_type):
         self.sprite = Sprite(self.icon.coordinator, "details_window", self.img_name)
         self.sprite.initialize()
         self.nineslice_source = self.sprite.surface.convert()
@@ -269,35 +262,24 @@ class DetailsWindow:
         self.sprite.type = "details_window"
         self.sprite.origin_depth = CONSTANTS.FRONT_DEPTH + 1
         self.sprite.depth = self.sprite.origin_depth
-        self.generate_output_boxes()
+        self.init_output(res_type)
 
-    def generate_output_boxes(self):
+    def init_output(self, res_type):
         font = self.icon.coordinator.ui_manager.font
-        self.output_box.large_quick = OutputBox(self, "Large Quick", font)
-        self.output_box.small_quick = OutputBox(self, "Small Quick", font)
-        self.output_box.line_pan = OutputBox(self, "Line Pan", font)
-        self.output_box.cooked_chicken = OutputBox(self, "Cooked Chicken", font)
-        self.output_box.raw_chicken = OutputBox(self, "Raw Chicken", font)
-        self.init_boxes()
+        self.output_box = OutputBox(self, font)
+        self.init_output_surface(res_type)
 
-    def init_boxes(self):
-        key = [(1,12), (1,17), (1,22), (1,27), (31,31)]
-        for i, box in enumerate(vars(self.output_box).values()):
-            box.rect.width = int(max(self.max_w, self.w) * .915)
-            box.rect.height = int(max(self.max_h, self.h) // 8)
+    def init_output_surface(self, res_type):
+        offset_x = int(max(self.max_w, self.w) * .915)
+        offset_y = int(max(self.max_h, self.h) * .57)
+        self.output_box.rect.width = offset_x if res_type == "large" else offset_y
+        self.output_box.rect.height = offset_y if res_type == "large" else offset_x
 
-            col, row = key[i]
-            x, y = self.grid.cells[row][col]
-
-            pad_x = self.grid.cell_width // 2
-            pad_y = self.grid.cell_height // 2
-            box.rect.topleft = (x + pad_x, y + pad_y)
-
-            box.surface = pygame.Surface((box.rect.width, box.rect.height)).convert()
-            r = (i+1) * 30
-            g = (i+1) * 20
-            b = (i+1) * 10
-            box.surface.fill((r, g, b))
+        self.output_box.surface = pygame.Surface((self.output_box.rect.width, self.output_box.rect.height)).convert()
+        r = 30
+        g = 20
+        b = 10
+        self.output_box.surface.fill((r, g, b))
 
     def update(self):
         if self.active:
@@ -308,11 +290,8 @@ class DetailsWindow:
     def draw_box_surface(self):
         x = self.x - self.max_w if self.max_w != 0 else self.x
         y = self.y - self.max_h if self.max_h != 0 else self.y
-        self.box_surface.fill(CONSTANTS.TRANSPARENT)
-        for box in vars(self.output_box).values():
-            self.box_surface.blit(box.surface, box.rect.topleft)
         self.icon.coordinator.ui_manager.pygame.dynamic_canvas.blit(
-            self.box_surface, (x, y))
+            self.output_box.surface, (x + 14, y * 4))
 
     def roll_window(self):
         ui_manager = self.icon.coordinator.ui_manager
@@ -369,12 +348,12 @@ class DetailsWindow:
 
 
 class OutputBox:
-    def __init__(self, window, title, font):
-        self.title = title
+    def __init__(self, window, font):
+        self.title = None
         self.window = window
         self.font = font
-        self.title_surface = self.font.render(self.title,True,(0, 0, 0))
         self.rect = pygame.Rect(0,0,0,0)
+        self.surface = None
         self.bg = SimpleNamespace(img_name=None, surface=None)
         self.arrow = SimpleNamespace(img_name=None, surface=None, rect=pygame.Rect(0,0,0,0))
         self.value = SimpleNamespace(current=None, last=None, surface=None)
