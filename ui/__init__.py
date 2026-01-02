@@ -197,6 +197,7 @@ class DetailsWindow:
         self.icon = icon
         self.name = "details_window"
         self.img_name = "details_window.png"
+        self.grid = Grid()
         self.w = 0
         self.max_w = 0
         self.min_w = 0
@@ -206,33 +207,53 @@ class DetailsWindow:
         self.x = 0
         self.y = 0
         self.thickness = 8
+        self.buffer = 10
         self.sprite = None
         self.nineslice_source = None
         self.scale = .55
         self.last_size = 0
         self.active = False
         self.close = False
+        self.box_surface = None
         self.output_box = SimpleNamespace(large_quick=None, small_quick=None, line_pan=None,
                                           cooked_chicken=None, raw_chicken=None)
 
     def init(self):
         ui_manager = self.icon.coordinator.ui_manager
         sprite = self.icon.sprite
-        focused_icon_h = sprite.h * ui_manager.focused_scale * self.scale
-        focused_icon_w = sprite.w * ui_manager.focused_scale * self.scale
+        max_window_w = sprite.w * ui_manager.focused_scale * self.scale
+        max_window_h = sprite.h * ui_manager.focused_scale * self.scale
+
         if ui_manager.active_profile.res_type == "medium":
             self.w = sprite.w * ui_manager.focused_scale
             self.h = self.thickness * 2
-            self.max_h = focused_icon_h
+            self.max_h = max_window_h
             self.x = sprite.center_x
             self.y = sprite.center_y
         else:
             self.w = self.thickness * 2
             self.h = sprite.h * ui_manager.focused_scale
-            self.max_w = focused_icon_w
+            self.max_w = max_window_w
             self.x = sprite.center_x
             self.y = sprite.center_y
+
+        w = int(max(self.w, self.max_w))
+        h = int(max(self.h, self.max_h))
+
+        self.init_grid(w, h)
+
+        self.box_surface = pygame.Surface((w, h)).convert()
+        print("box_surface:", self.box_surface.get_size())
+        self.box_surface.set_colorkey(CONSTANTS.TRANSPARENT)
+
         self.create_window()
+
+    def init_grid(self, w, h):
+        cell_w = w // 32
+        cell_h = h // 32
+        rows = 32
+        cols = 32
+        self.grid.create_grid((0, 0), cell_w, cell_h, rows, cols)
 
     def create_window(self):
         self.sprite = Sprite(self.icon.coordinator, "details_window", self.img_name)
@@ -257,11 +278,41 @@ class DetailsWindow:
         self.output_box.line_pan = OutputBox(self, "Line Pan", font)
         self.output_box.cooked_chicken = OutputBox(self, "Cooked Chicken", font)
         self.output_box.raw_chicken = OutputBox(self, "Raw Chicken", font)
+        self.init_boxes()
+
+    def init_boxes(self):
+        key = [(1,12), (1,17), (1,22), (1,27), (31,31)]
+        for i, box in enumerate(vars(self.output_box).values()):
+            box.rect.width = int(max(self.max_w, self.w) * .915)
+            box.rect.height = int(max(self.max_h, self.h) // 8)
+
+            col, row = key[i]
+            x, y = self.grid.cells[row][col]
+
+            pad_x = self.grid.cell_width // 2
+            pad_y = self.grid.cell_height // 2
+            box.rect.topleft = (x + pad_x, y + pad_y)
+
+            box.surface = pygame.Surface((box.rect.width, box.rect.height)).convert()
+            r = (i+1) * 30
+            g = (i+1) * 20
+            b = (i+1) * 10
+            box.surface.fill((r, g, b))
 
     def update(self):
         if self.active:
             self.sprite.render = True
             self.roll_window()
+            self.draw_box_surface()
+
+    def draw_box_surface(self):
+        x = self.x - self.max_w if self.max_w != 0 else self.x
+        y = self.y - self.max_h if self.max_h != 0 else self.y
+        self.box_surface.fill(CONSTANTS.TRANSPARENT)
+        for box in vars(self.output_box).values():
+            self.box_surface.blit(box.surface, box.rect.topleft)
+        self.icon.coordinator.ui_manager.pygame.dynamic_canvas.blit(
+            self.box_surface, (x, y))
 
     def roll_window(self):
         ui_manager = self.icon.coordinator.ui_manager
@@ -308,7 +359,6 @@ class DetailsWindow:
             self.sprite.surface = NineSlice(
                 self.nineslice_source, self.thickness).render(w, h)
             self.last_size = size
-
 
     def reset_window(self):
         self.sprite.render = False
@@ -406,15 +456,15 @@ class Background:
 
 class Grid:
     def __init__(self):
-        self.origin = (0,0)
+        self.top_left = (0,0)
         self.cols = 1
         self.rows = 1
         self.cell_width = 1
         self.cell_height = 1
         self.cells = []
 
-    def create_grid(self, origin: tuple, cell_width: int, cell_height: int, rows: int, cols: int) -> None:
-        self.origin = origin
+    def create_grid(self, top_left: tuple, cell_width: int, cell_height: int, rows: int, cols: int) -> None:
+        self.top_left = top_left
         self.rows = rows
         self.cols = cols
         self.cell_width = cell_width
@@ -422,7 +472,7 @@ class Grid:
         for r in range(self.rows):
             row = []
             for c in range(self.cols):
-                x = origin[0] + c * self.cell_width
-                y = origin[1] + r * self.cell_height
+                x = top_left[0] + c * self.cell_width
+                y = top_left[1] + r * self.cell_height
                 row.append((x, y))
             self.cells.append(row)
