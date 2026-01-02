@@ -207,7 +207,7 @@ class DetailsWindow:
         self.x = 0
         self.y = 0
         self.thickness = 8
-        self.buffer = 10
+        self.buffer = 15
         self.sprite = None
         self.nineslice_source = None
         self.scale = .55
@@ -215,15 +215,18 @@ class DetailsWindow:
         self.active = False
         self.close = False
         self.output_box = None
+        self.output_x = 0
+        self.output_y = 0
+        self.res_type = None
 
     def init(self):
         ui_manager = self.icon.coordinator.ui_manager
         sprite = self.icon.sprite
         max_window_w = sprite.w * ui_manager.focused_scale * self.scale
         max_window_h = sprite.h * ui_manager.focused_scale * self.scale
-        res_type = ui_manager.active_profile.res_type
+        self.res_type = ui_manager.active_profile.res_type
 
-        if res_type == "medium":
+        if self.res_type == "medium":
             self.w = sprite.w * ui_manager.focused_scale
             self.h = self.thickness * 2
             self.max_h = max_window_h
@@ -239,7 +242,7 @@ class DetailsWindow:
         w = int(max(self.w, self.max_w))
         h = int(max(self.h, self.max_h))
 
-        self.create_window(res_type)
+        self.create_window()
 
     def init_grid(self, w, h):
         cell_w = w // 32
@@ -248,7 +251,7 @@ class DetailsWindow:
         cols = 32
         self.grid.create_grid((0, 0), cell_w, cell_h, rows, cols)
 
-    def create_window(self, res_type):
+    def create_window(self):
         self.sprite = Sprite(self.icon.coordinator, "details_window", self.img_name)
         self.sprite.initialize()
         self.nineslice_source = self.sprite.surface.convert()
@@ -262,18 +265,25 @@ class DetailsWindow:
         self.sprite.type = "details_window"
         self.sprite.origin_depth = CONSTANTS.FRONT_DEPTH + 1
         self.sprite.depth = self.sprite.origin_depth
-        self.init_output(res_type)
+        self.init_output()
 
-    def init_output(self, res_type):
+    def init_output(self):
         font = self.icon.coordinator.ui_manager.font
         self.output_box = OutputBox(self, font)
-        self.init_output_surface(res_type)
+        self.init_output_surface()
 
-    def init_output_surface(self, res_type):
+    def init_output_surface(self):
+        if self.res_type == "medium":
+            self.output_x = (self.x - self.max_w if self.max_w != 0 else self.x) * 4
+            self.output_y = (self.y - self.max_h if self.max_h != 0 else self.y) + self.buffer
+        else:
+            self.output_x = (self.x - self.max_w if self.max_w != 0 else self.x) + self.buffer
+            self.output_y = (self.y - self.max_h if self.max_h != 0 else self.y) * 4
+
         offset_x = int(max(self.max_w, self.w) * .915)
         offset_y = int(max(self.max_h, self.h) * .57)
-        self.output_box.rect.width = offset_x if res_type == "large" else offset_y
-        self.output_box.rect.height = offset_y if res_type == "large" else offset_x
+        self.output_box.rect.width = offset_x
+        self.output_box.rect.height = offset_y
 
         self.output_box.surface = pygame.Surface((self.output_box.rect.width, self.output_box.rect.height)).convert()
         r = 30
@@ -288,10 +298,9 @@ class DetailsWindow:
             self.draw_box_surface()
 
     def draw_box_surface(self):
-        x = self.x - self.max_w if self.max_w != 0 else self.x
-        y = self.y - self.max_h if self.max_h != 0 else self.y
+
         self.icon.coordinator.ui_manager.pygame.dynamic_canvas.blit(
-            self.output_box.surface, (x + 14, y * 4))
+            self.output_box.surface, (self.output_x, self.output_y))
 
     def roll_window(self):
         ui_manager = self.icon.coordinator.ui_manager
