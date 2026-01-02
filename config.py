@@ -84,4 +84,36 @@ buttons_data = SimpleNamespace(
             quick=SimpleNamespace(name="quick", image_name="button_quick_idle.png", state_tag="quick"),
 )
 
+output_box_layouts = {
+    "medium":{
+        "Large Quick": (120,0),
+        "large_on_hand": (30,30),
+        "large_on_hand_value": (30, 60),
+        "large_par": (30,30),
+        "large_par_value": (30, 60),
+        "Small Quick": (30,30),
+        "small_on_hand": (30,60),
+        "small_par": (30,60),
+        "Line Pans": (30,30),
+        "line_pans_on_hand": (30,30),
+        "line_pans_par": (30,30),
+    },
+    "large":{
+        "Large Quick": (130,0),
+        "large_on_hand": (20,30),
+        "large_on_hand_value": (20, 60),
+        "large_par": (280,30),
+        "large_par_value": (280, 60),
+        "Small Quick": (130,200),
+        "small_on_hand": (20,230),
+        "small_on_hand_value": (20, 260),
+        "small_par": (280,230),
+        "small_par_value": (280, 260),
+        "Line Pans": (30,30),
+        "line_pans_on_hand": (30,30),
+        "line_pans_on_hand_value": (30, 40),
+        "line_pans_par": (30,30),
+        "line_pans_par_value": (30, 40),
+    }
+}
 
