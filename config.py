@@ -13,6 +13,7 @@ CONSTANTS.REACH_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick
 CONSTANTS.QUICK_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
 CONSTANTS.WALK_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
 CONSTANTS.TRANSPARENT = (255, 0, 255)
+CONSTANTS.WINDOW_COLOR = (110,158,179)
 
 ingredients_data = {
     "Cranberries": .28,
@@ -86,34 +87,71 @@ buttons_data = SimpleNamespace(
 
 output_box_layouts = {
     "medium":{
-        "Large Quick": (120,0),
-        "large_on_hand": (30,30),
-        "large_on_hand_value": (30, 60),
-        "large_par": (30,30),
-        "large_par_value": (30, 60),
-        "Small Quick": (30,30),
-        "small_on_hand": (30,60),
-        "small_par": (30,60),
-        "Line Pans": (30,30),
-        "line_pans_on_hand": (30,30),
-        "line_pans_par": (30,30),
+        "Large Quick": (130,0),
+        "Large On Hand": (0,30),
+        "large_quick_on_hand": (50, 100),
+        "Large Par": (230,30),
+        "large_quick_par": (260, 100),
+        "Small Quick": (130,200),
+        "Small On Hand": (0,230),
+        "small_quick_on_hand": (50, 300),
+        "Small Par": (230,230),
+        "small_quick_par": (260, 300),
+        "Line Pans": (130,0),
+        "Line On Hand": (0,30),
+        "line_mix_on_hand": (50, 100),
+        "Line Par": (230,30),
+        "line_mix_par": (260, 100),
     },
     "large":{
         "Large Quick": (130,0),
-        "large_on_hand": (20,30),
-        "large_on_hand_value": (20, 60),
-        "large_par": (280,30),
-        "large_par_value": (280, 60),
+        "Large On Hand": (0,30),
+        "large_quick_on_hand": (50, 100),
+        "Large Par": (230,30),
+        "large_quick_par": (260, 100),
         "Small Quick": (130,200),
-        "small_on_hand": (20,230),
-        "small_on_hand_value": (20, 260),
-        "small_par": (280,230),
-        "small_par_value": (280, 260),
-        "Line Pans": (30,30),
-        "line_pans_on_hand": (30,30),
-        "line_pans_on_hand_value": (30, 40),
-        "line_pans_par": (30,30),
-        "line_pans_par_value": (30, 40),
+        "Small On Hand": (0,230),
+        "small_quick_on_hand": (50, 300),
+        "Small Par": (230,230),
+        "small_quick_par": (260, 300),
+        "Line Pans": (130,0),
+        "Line On Hand": (0,30),
+        "line_mix_on_hand": (50, 100),
+        "Line Par": (230,30),
+        "line_mix_par": (260, 100),
     }
 }
 
+OUTPUT_SCHEMAS = {
+    "quick": {
+        "row_1_label": "Large Quick",
+        "row_1_hand_label": "Large On Hand",
+        "row_1_hand_value": "large_quick_on_hand",
+        "row_1_par_label": "Large Par",
+        "row_1_par_value": "large_quick_par",
+        "row_2_label": "Small Quick",
+        "row_2_hand_label": "Small On Hand",
+        "row_2_hand_value": "small_quick_on_hand",
+        "row_2_par_label": "Small Par",
+        "row_2_par_value": "small_quick_par",
+    },
+    "walk_in": {
+        "row_1_label": "Cooked Chicken",
+        "row_1_hand_label": "cooked_on_hand",
+        "row_1_hand_value": "cooked_on_hand_value",
+        "row_1_par_label": "cooked_par",
+        "row_1_par_value": "cooked_par_value",
+        "row_2_label": "Raw Chicken",
+        "row_2_hand_label": "raw_on_hand",
+        "row_2_hand_value": "raw_on_hand_value",
+        "row_2_par_label": "raw_par",
+        "row_2_par_value": "raw_par_value",
+    },
+    "reach_in": {
+        "row_1_label": "Line Pans",
+        "row_1_hand_label": "Line On Hand",
+        "row_1_hand_value": "line_mix_on_hand",
+        "row_1_par_label": "Line Par",
+        "row_1_par_value": "line_mix_par",
+    },
+}

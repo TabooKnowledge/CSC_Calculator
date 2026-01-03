@@ -272,7 +272,7 @@ class EventManager:
             self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth + 1
         sprite.focused = True
         sprite.moving_home = False
-        sprite.depth = sprite.icon.sprite.depth + 2
+        sprite.depth = CONSTANTS.FRONT_DEPTH + 2
         self.focused_flavor_sprite = sprite
 
     def unfocus_current_flavor(self):

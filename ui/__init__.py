@@ -1,7 +1,7 @@
 import os
 import pygame
 from types import SimpleNamespace
-from config import CONSTANTS, output_box_layouts
+from config import CONSTANTS, output_box_layouts, OUTPUT_SCHEMAS
 
 
 class DrawManager:
@@ -17,7 +17,7 @@ class DrawManager:
         registry.sort(key=lambda s: getattr(s, "depth", 0))
         for sprite in registry:
             if sprite.render:
-                if sprite.flavor is not None:
+                if getattr(sprite, "flavor", None):
                     self.draw_text_surface(sprite)
                 sprite.draw(self.canvas)
                 sprite.update()
@@ -218,6 +218,8 @@ class DetailsWindow:
         self.output_x = 0
         self.output_y = 0
         self.res_type = None
+        self.depth = CONSTANTS.FRONT_DEPTH + 1
+        self.render = False
 
     def init(self):
         ui_manager = self.icon.coordinator.ui_manager
@@ -243,13 +245,18 @@ class DetailsWindow:
         h = int(max(self.h, self.max_h))
 
         self.create_window()
+        self.icon.coordinator.draw_manager.subscribe(self)
 
-    def init_grid(self, w, h):
-        cell_w = w // 32
-        cell_h = h // 32
-        rows = 32
-        cols = 32
-        self.grid.create_grid((0, 0), cell_w, cell_h, rows, cols)
+    def update(self):
+        if self.active:
+            self.sprite.render = True
+            self.roll_window()
+            if self.icon.sprite.idle_focused:
+                if not self.icon.sprite.moving_home:
+                    self.render = True
+                    self.output_box.update()
+                else:
+                    self.render = False
 
     def create_window(self):
         self.sprite = Sprite(self.icon.coordinator, "details_window", self.img_name)
@@ -288,22 +295,10 @@ class DetailsWindow:
         self.output_box.rect.height = h
 
         self.output_box.surface = pygame.Surface((self.output_box.rect.width, self.output_box.rect.height)).convert()
-        self.output_box.surface.set_colorkey(CONSTANTS.TRANSPARENT)
-        self.output_box.surface.fill(CONSTANTS.TRANSPARENT)
         self.output_box.init()
 
-    def update(self):
-        if self.active:
-            self.sprite.render = True
-            self.roll_window()
-            if self.icon.sprite.idle_focused:
-                if not self.icon.sprite.moving_home:
-                    self.output_box.update()
-                    self.draw_box_surface()
-
-    def draw_box_surface(self):
-        self.icon.coordinator.ui_manager.pygame.dynamic_canvas.blit(
-            self.output_box.surface, (self.output_x, self.output_y))
+    def draw(self, canvas):
+        canvas.blit(self.output_box.surface, (self.output_x, self.output_y))
 
     def roll_window(self):
         ui_manager = self.icon.coordinator.ui_manager
@@ -372,40 +367,13 @@ class OutputBox:
         self.layout = None
         self.dirty = True
         self.surface = None
+        self.schema = OUTPUT_SCHEMAS[window.icon.name]
 
     def init(self):
         if self.res_type == "medium":
             self.layout = output_box_layouts["medium"]
         else:
             self.layout = output_box_layouts["large"]
-
-    def render(self):
-        if not self.dirty:
-            return
-        self.surface.fill(CONSTANTS.TRANSPARENT)
-        def put(key, text):
-            x, y = self.layout[key]
-            surf = self.font.render(str(text), True, (0,0,0))
-            self.surface.blit(surf, (x, y))
-
-        put("Large Quick", "Large Quick")
-        put("large_on_hand", "On Hand")
-        put("large_par", "Par")
-        put("Small Quick", "Small Quick")
-        put("small_on_hand", "On Hand")
-        put("small_par", "Par")
-        #self.dirty = False
-
-        if self.current_flavor is not None:
-            put("large_on_hand_value", self.current_flavor.large_quick_on_hand)
-            put("large_par_value", self.current_flavor.large_quick_par)
-            put("small_on_hand_value", self.current_flavor.small_quick_on_hand)
-            put("small_par_value", self.current_flavor.small_quick_par)
-        else:
-            put("large_on_hand_value", 2)
-            put("large_par_value", 0)
-            put("small_on_hand_value", 0)
-            put("small_par_value", 0)
 
     def update(self):
         focused_flavor_sprite = self.window.icon.coordinator.event_manager.focused_flavor_sprite
@@ -418,9 +386,26 @@ class OutputBox:
                 self.dirty = True
         self.render()
 
-    #def update_value_surface(self):
+    def render(self):
+        if not self.dirty:
+            return
 
-    #def update_surface(self):
+        self.surface.fill(CONSTANTS.WINDOW_COLOR)
+
+        for slot, token in self.schema.items():
+            if self.current_flavor and hasattr(self.current_flavor, token):
+                text = getattr(self.current_flavor, token, 0)
+            else:
+                if "_" in token:
+                    text = 0
+                else:
+                    text = token
+
+            x, y = self.layout[token]
+            surf = self.font.render(str(text), True, (0,0,0))
+            self.surface.blit(surf, (x, y))
+
+        self.dirty = False
 
 
 class NineSlice:
