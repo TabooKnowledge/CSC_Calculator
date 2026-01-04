@@ -1,5 +1,6 @@
 import os
 from types import SimpleNamespace
+import pygame
 
 
 CONSTANTS = SimpleNamespace()
@@ -92,11 +93,13 @@ output_box_layouts = {
         "large_quick_on_hand": (50, 100),
         "Large Par": (230,30),
         "large_quick_par": (260, 100),
+
         "Small Quick": (130,200),
         "Small On Hand": (0,230),
         "small_quick_on_hand": (50, 300),
         "Small Par": (230,230),
         "small_quick_par": (260, 300),
+
         "Line Pans": (130,0),
         "Line On Hand": (0,30),
         "line_mix_on_hand": (50, 100),
@@ -109,16 +112,19 @@ output_box_layouts = {
         "large_quick_on_hand": (50, 100),
         "Large Par": (230,30),
         "large_quick_par": (260, 100),
+
         "Small Quick": (130,200),
         "Small On Hand": (0,230),
         "small_quick_on_hand": (50, 300),
         "Small Par": (230,230),
         "small_quick_par": (260, 300),
+
         "Line Pans": (130,0),
         "Line On Hand": (0,30),
         "line_mix_on_hand": (50, 100),
         "Line Par": (230,30),
         "line_mix_par": (260, 100),
+
     }
 }
 
@@ -154,4 +160,49 @@ OUTPUT_SCHEMAS = {
         "row_1_par_label": "Line Par",
         "row_1_par_value": "line_mix_par",
     },
+}
+
+ARROW_SCHEMAS = {
+    "medium": {
+        "quick": {
+            "large_hand_incr_arrow": ((40, 65), "large_quick_on_hand", +1),
+            "large_hand_decr_arrow": ((40, 120), "large_quick_on_hand", -1),
+            "large_par_incr_arrow": ((250, 65), "large_quick_par", +1),
+            "large_par_decr_arrow": ((250, 120), "large_quick_par", -1),
+            "small_hand_incr_arrow": ((40, 265), "small_quick_on_hand", +1),
+            "small_hand_decr_arrow": ((40, 320), "small_quick_on_hand", -1),
+            "small_par_incr_arrow": ((250, 265), "small_quick_par", +1),
+            "small_par_decr_arrow": ((250, 320), "small_quick_par", -1),
+        },
+        "walk_in": {
+
+        },
+        "reach_in": {
+            "line_hand_incr_arrow": ((40, 65), "line_mix_on_hand", +1),
+            "line_hand_decr_arrow": ((40, 120), "line_mix_on_hand", -1),
+            "line_par_incr_arrow": ((250, 65), "line_mix_par", +1),
+            "line_par_decr_arrow": ((250, 120), "line_mix_par", -1),
+        }
+    },
+    "large":{
+        "quick": {
+            "large_hand_incr_arrow": ((40, 65), "large_quick_on_hand", +1),
+            "large_hand_decr_arrow": ((40, 120), "large_quick_on_hand", -1),
+            "large_par_incr_arrow":  ((250, 65), "large_quick_par", +1),
+            "large_par_decr_arrow":  ((250, 120), "large_quick_par", -1),
+            "small_hand_incr_arrow": ((40, 265), "small_quick_on_hand", +1),
+            "small_hand_decr_arrow": ((40, 320), "small_quick_on_hand", -1),
+            "small_par_incr_arrow":  ((250, 265), "small_quick_par", +1),
+            "small_par_decr_arrow":  ((250, 320), "small_quick_par", -1),
+        },
+        "walk_in": {
+
+        },
+        "reach_in": {
+            "line_hand_incr_arrow":  ((40, 65), "line_mix_on_hand", +1),
+            "line_hand_decr_arrow": ((40, 120), "line_mix_on_hand", -1),
+            "line_par_incr_arrow":  ((250, 65), "line_mix_par", +1),
+            "line_par_decr_arrow":  ((250, 120), "line_mix_par", -1),
+        }
+    }
 }

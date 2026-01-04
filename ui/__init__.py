@@ -1,7 +1,8 @@
 import os
 import pygame
 from types import SimpleNamespace
-from config import CONSTANTS, output_box_layouts, OUTPUT_SCHEMAS
+from pygame import mouse
+from config import CONSTANTS, output_box_layouts, OUTPUT_SCHEMAS, ARROW_SCHEMAS
 
 
 class DrawManager:
@@ -19,9 +20,8 @@ class DrawManager:
             if sprite.render:
                 if getattr(sprite, "flavor", None):
                     self.draw_text_surface(sprite)
-                sprite.draw(self.canvas)
                 sprite.update()
-
+                sprite.draw(self.canvas)
 
     def update_canvas(self):
         self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
@@ -44,6 +44,8 @@ class DrawManager:
 
 class Sprite:
     def __init__(self, coordinator, name, img_name):
+        self.is_arrow = False
+        self.arrow = None
         self.flavor = None
         self.icon = None
         self.origin_depth = 0
@@ -146,6 +148,7 @@ class Icon:
         self.contents = None
         self.grid = None
         self.show_contents = False
+        self.details_window = None
 
     def populate_content(self, content: list):
         if not isinstance(content, list):
@@ -182,11 +185,13 @@ class Icon:
         for c in self.contents:
             sprite = c.sprite
             if self.show_contents:
+                self.details_window.output_box.render_arrows(True)
                 sprite.render = True
                 if sprite.alpha != 255:
                     self.coordinator.animation_manager.lerp_alpha(sprite, 255)
                 sprite.depth = CONSTANTS.FRONT_DEPTH + 1
             else:
+                self.details_window.output_box.render_arrows(False)
                 sprite.render = False
                 sprite.alpha = 0
                 sprite.surface.set_alpha(sprite.alpha)
@@ -218,7 +223,7 @@ class DetailsWindow:
         self.output_x = 0
         self.output_y = 0
         self.res_type = None
-        self.depth = CONSTANTS.FRONT_DEPTH + 1
+        self.depth = CONSTANTS.FRONT_DEPTH
         self.render = False
 
     def init(self):
@@ -270,7 +275,7 @@ class DetailsWindow:
         self.sprite.x = self.x
         self.sprite.y = self.y
         self.sprite.type = "details_window"
-        self.sprite.origin_depth = CONSTANTS.FRONT_DEPTH + 1
+        self.sprite.origin_depth = CONSTANTS.FRONT_DEPTH
         self.sprite.depth = self.sprite.origin_depth
         self.init_output()
 
@@ -356,24 +361,42 @@ class DetailsWindow:
 
 class OutputBox:
     def __init__(self, window, font, res_type):
+        self.click_targets = []
         self.res_type = res_type
+        self.sprite_type = "modify"
         self.window = window
         self.font = font
         self.rect = pygame.Rect(0,0,0,0)
         self.bg = SimpleNamespace(img_name=None, surface=None)
-        self.arrow = SimpleNamespace(img_name=None, surface=None, rect=pygame.Rect(0,0,0,0))
-        self.value = SimpleNamespace(current=None, last=None, surface=None)
+        self.decr_arrow = SimpleNamespace(img_name="decr_arrow.png", surface=None, rect=pygame.Rect(0,0,0,0))
+        self.incr_arrow = SimpleNamespace(img_name="incr_arrow.png", surface=None, rect=pygame.Rect(0,0,0,0))
+        self.arrows = []
         self.current_flavor = None
         self.layout = None
         self.dirty = True
         self.surface = None
-        self.schema = OUTPUT_SCHEMAS[window.icon.name]
+        self.layout_schema = OUTPUT_SCHEMAS[window.icon.name]
+        self.arrow_schema = ARROW_SCHEMAS[res_type][window.icon.name]
 
     def init(self):
         if self.res_type == "medium":
             self.layout = output_box_layouts["medium"]
         else:
             self.layout = output_box_layouts["large"]
+        self.decr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "decr_arrow.png")).convert()
+        w = self.decr_arrow.surface.get_width() // 12
+        h = self.decr_arrow.surface.get_height() // 12
+
+        self.decr_arrow.rect.width = w
+        self.decr_arrow.rect.height = h
+        self.decr_arrow.surface = pygame.transform.scale(self.decr_arrow.surface, (w, h))
+
+        self.incr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "incr_arrow.png")).convert()
+        self.incr_arrow.rect.width = w
+        self.incr_arrow.rect.height = h
+        self.incr_arrow.surface = pygame.transform.scale(self.incr_arrow.surface, (w, h))
+
+        self.build_arrows()
 
     def update(self):
         focused_flavor_sprite = self.window.icon.coordinator.event_manager.focused_flavor_sprite
@@ -386,13 +409,56 @@ class OutputBox:
                 self.dirty = True
         self.render()
 
+    def on_arrow_click(self, m_pos):
+        if self.current_flavor is None:
+            return
+
+        mx, my = m_pos
+        wx = self.window.output_x
+        wy = self.window.output_y
+        lx = mx - wx
+        ly = my - wy
+        for arrow in self.arrows:
+            if arrow.rect.collidepoint(lx, ly):
+                value = getattr(self.current_flavor, arrow.attr, 0)
+                value += arrow.delta
+                value = max(0, min(15, value))
+                setattr(self.current_flavor, arrow.attr, value)
+                self.dirty = True
+                return
+
+    def build_arrows(self):
+        coordinator = self.window.icon.coordinator
+        w = self.decr_arrow.surface.get_width()
+        h = self.decr_arrow.surface.get_height()
+        def generate_arrow(label, schema):
+            x = schema[0][0]
+            y = schema[0][1]
+            rect = pygame.Rect(x, y, w, h)
+            attr = schema[1]
+            delta = schema[2]
+            if "incr" in label:
+                img_name = "incr_arrow.png"
+                surface = self.incr_arrow.surface
+            else:
+                img_name = "decr_arrow.png"
+                surface = self.decr_arrow.surface
+            arrow = Arrow(self, rect, attr, delta, coordinator, label, img_name, surface)
+            arrow.sprite.type = self.sprite_type
+            self.arrows.append(arrow)
+
+        for label, tup in self.arrow_schema.items():
+            generate_arrow(label, tup)
+
     def render(self):
+        if self.window.icon.name == "reach_in":
+            print("Found you")
         if not self.dirty:
             return
 
         self.surface.fill(CONSTANTS.WINDOW_COLOR)
 
-        for slot, token in self.schema.items():
+        for slot, token in self.layout_schema.items():
             if self.current_flavor and hasattr(self.current_flavor, token):
                 text = getattr(self.current_flavor, token, 0)
             else:
@@ -406,6 +472,36 @@ class OutputBox:
             self.surface.blit(surf, (x, y))
 
         self.dirty = False
+
+    def render_arrows(self, flag):
+        for arrow in self.arrows:
+            arrow.sprite.render = flag
+
+class Arrow:
+    def __init__(self, output_box, rect, attr, delta, coord, name, image_name, surface):
+        self.output_box = output_box
+        self.rect = rect
+        self.x = rect.left + self.output_box.window.output_x
+        self.y = rect.top + self.output_box.window.output_y
+        self.w = rect.width
+        self.h = rect.height
+        self.attr = attr
+        self.delta = delta
+        self.sprite = None
+        self.init_sprite(coord, name, image_name, surface)
+
+    def init_sprite(self, coord, name, image_name, surface):
+        self.sprite = Sprite(coord, name, image_name)
+        self.sprite.is_arrow = True
+        self.sprite.arrow = self
+        self.sprite.surface = surface.copy()
+        self.sprite.x = self.x
+        self.sprite.y = self.y
+        self.sprite.w = self.w
+        self.sprite.h = self.h
+        self.sprite.depth = CONSTANTS.FRONT_DEPTH+1
+        self.sprite.origin_depth = self.sprite.depth
+        coord.draw_manager.subscribe(self.sprite)
 
 
 class NineSlice:

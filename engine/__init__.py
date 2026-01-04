@@ -116,6 +116,12 @@ class EventManager:
                 "pointer_up": self.update_dragged_sprite,
                 "pointer_moving": self.move_sprite,
             },
+            "flavor_focused": {
+                "exit": self.exit,
+                "pointer_down": self.check_clicked,
+                "pointer_up": self.update_dragged_sprite,
+                "pointer_moving": self.move_sprite,
+            }
         }
 
     def update(self):
@@ -168,6 +174,8 @@ class EventManager:
                 self.active_event(type="icon")
             elif self.state == "container_open":
                 self.active_event(type="flavor")
+            elif self.state == "flavor_focused":
+                self.active_event(type="modify")
         self.active_event = None
 
     def exit(self, *args, **kwargs):
@@ -179,8 +187,7 @@ class EventManager:
     def check_clicked(self, *args, **kwargs):
         _type = kwargs.get("type")
         if _type is None:
-            ValueError("check_clicked requires type=sprite.type")
-            return
+            raise ValueError("check_clicked requires type=sprite.type")
 
         if self.sprite_transitioning:
             return
@@ -188,7 +195,7 @@ class EventManager:
         if _type == "icon":
             if self.focused_icon_sprite and self.point_in_sprite(self.focused_icon_sprite):
                 return
-        else:
+        elif _type == "flavor":
             if self.focused_flavor_sprite and self.point_in_sprite(self.focused_flavor_sprite):
                 return
 
@@ -196,7 +203,10 @@ class EventManager:
         for s in self.coordinator.draw_manager.registry:
             if not isinstance(s, Sprite):
                 continue
-            if s.type != _type:
+            if _type == "modify":
+                if s.type not in ("modify", "flavor"):
+                    continue
+            elif s.type != _type:
                 continue
             if self.point_in_sprite(s):
                 hits.append(s)
@@ -212,11 +222,18 @@ class EventManager:
 
         clicked = max(hits, key=z_keys)
 
-        if _type == "icon":
+        if _type == "modify":
+            if clicked.type == "modify":
+                self.focused_icon_sprite.icon.details_window.output_box.on_arrow_click(
+                    (self.event_pos.x, self.event_pos.y))
+            else:
+                self.set_focused_flavor(clicked)
+        elif _type == "icon":
             self.set_focused_icon(clicked)
             self.refresh_flavors()
-        else:
+        elif _type == "flavor":
             self.set_focused_flavor(clicked)
+
 
     def point_in_sprite(self, s,):
             return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
@@ -266,13 +283,17 @@ class EventManager:
     def set_focused_flavor(self, sprite):
         if sprite.moving_home:
             return
+
+        print(f"State set to flavor_focused")
+        self.state = "flavor_focused"
+
         if self.focused_flavor_sprite and self.focused_flavor_sprite is not sprite:
             self.focused_flavor_sprite.focused = False
             self.focused_flavor_sprite.moving_home = True
             self.focused_flavor_sprite.depth = self.focused_flavor_sprite.icon.sprite.depth + 1
         sprite.focused = True
         sprite.moving_home = False
-        sprite.depth = CONSTANTS.FRONT_DEPTH + 2
+        sprite.depth = CONSTANTS.FRONT_DEPTH + 10000
         self.focused_flavor_sprite = sprite
 
     def unfocus_current_flavor(self):
@@ -282,6 +303,9 @@ class EventManager:
             else:
                 self.reset_to_main()
                 return
+
+        print(f"State set to container_open")
+        self.state = "container_open"
 
         self.focused_flavor_sprite.focused = False
         self.focused_flavor_sprite.moving_home = True
@@ -333,6 +357,8 @@ class UiManager:
         self.update_icons()
         self.draw_canvas()
 
+
+
     def draw_canvas(self):
         self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
         self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
@@ -340,8 +366,9 @@ class UiManager:
     def update_icons(self):
         for icon in self.icons_list:
             icon.toggle_show_contents()
-            if icon.details_window.active:
-                icon.details_window.update()
+
+            icon.details_window.update()
+
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
