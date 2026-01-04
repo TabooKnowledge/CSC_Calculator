@@ -88,57 +88,56 @@ buttons_data = SimpleNamespace(
 
 output_box_layouts = {
     "medium":{
-        "Large Quick": (130,0),
-        "Large On Hand": (0,30),
-        "large_quick_on_hand": (50, 100),
-        "Large Par": (230,30),
-        "large_quick_par": (260, 100),
+        "Large Quick": (118,85),
+        "On Hand": (35,0),
+        "large_quick_on_hand": (65, 85),
+        "Par": (246,0),
+        "large_quick_par": (255, 85),
 
-        "Small Quick": (130,200),
-        "Small On Hand": (0,230),
-        "small_quick_on_hand": (50, 300),
-        "Small Par": (230,230),
-        "small_quick_par": (260, 300),
+        "Small Quick": (118,285),
+        "_On Hand": (35,200),
+        "small_quick_on_hand": (65, 290),
+        "_Par": (246,200),
+        "small_quick_par": (255, 290),
 
-        "Line Pans": (130,0),
-        "Line On Hand": (0,30),
-        "line_mix_on_hand": (50, 100),
-        "Line Par": (230,30),
-        "line_mix_par": (260, 100),
+        "Line Pans": (118, 85),
+        "__On Hand": (35, 0),
+        "line_mix_on_hand": (65, 85),
+        "__Par": (246, 0),
+        "line_mix_par": (255, 85),
     },
     "large":{
-        "Large Quick": (130,0),
-        "Large On Hand": (0,30),
-        "large_quick_on_hand": (50, 100),
-        "Large Par": (230,30),
-        "large_quick_par": (260, 100),
+        "Large Quick": (118,85),
+        "On Hand": (35,0),
+        "large_quick_on_hand": (65, 85),
+        "Par": (246,0),
+        "large_quick_par": (255, 85),
 
-        "Small Quick": (130,200),
-        "Small On Hand": (0,230),
-        "small_quick_on_hand": (50, 300),
-        "Small Par": (230,230),
-        "small_quick_par": (260, 300),
+        "Small Quick": (118,285),
+        "_On Hand": (35,200),
+        "small_quick_on_hand": (65, 290),
+        "_Par": (246,200),
+        "small_quick_par": (255, 290),
 
-        "Line Pans": (130,0),
-        "Line On Hand": (0,30),
-        "line_mix_on_hand": (50, 100),
-        "Line Par": (230,30),
-        "line_mix_par": (260, 100),
-
+        "Line Pans": (118, 85),
+        "__On Hand": (35, 0),
+        "line_mix_on_hand": (65, 85),
+        "__Par": (246, 0),
+        "line_mix_par": (255, 85),
     }
 }
 
 OUTPUT_SCHEMAS = {
     "quick": {
         "row_1_label": "Large Quick",
-        "row_1_hand_label": "Large On Hand",
+        "row_1_hand_label": "On Hand",
         "row_1_hand_value": "large_quick_on_hand",
-        "row_1_par_label": "Large Par",
+        "row_1_par_label": "Par",
         "row_1_par_value": "large_quick_par",
         "row_2_label": "Small Quick",
-        "row_2_hand_label": "Small On Hand",
+        "row_2_hand_label": "_On Hand",
         "row_2_hand_value": "small_quick_on_hand",
-        "row_2_par_label": "Small Par",
+        "row_2_par_label": "_Par",
         "row_2_par_value": "small_quick_par",
     },
     "walk_in": {
@@ -155,54 +154,54 @@ OUTPUT_SCHEMAS = {
     },
     "reach_in": {
         "row_1_label": "Line Pans",
-        "row_1_hand_label": "Line On Hand",
+        "row_1_hand_label": "__On Hand",
         "row_1_hand_value": "line_mix_on_hand",
-        "row_1_par_label": "Line Par",
+        "row_1_par_label": "__Par",
         "row_1_par_value": "line_mix_par",
     },
 }
 
 ARROW_SCHEMAS = {
     "medium": {
-        "quick": {
-            "large_hand_incr_arrow": ((40, 65), "large_quick_on_hand", +1),
-            "large_hand_decr_arrow": ((40, 120), "large_quick_on_hand", -1),
-            "large_par_incr_arrow": ((250, 65), "large_quick_par", +1),
-            "large_par_decr_arrow": ((250, 120), "large_quick_par", -1),
-            "small_hand_incr_arrow": ((40, 265), "small_quick_on_hand", +1),
-            "small_hand_decr_arrow": ((40, 320), "small_quick_on_hand", -1),
-            "small_par_incr_arrow": ((250, 265), "small_quick_par", +1),
-            "small_par_decr_arrow": ((250, 320), "small_quick_par", -1),
+         "quick": {
+            "large_hand_incr_arrow": ((40, 15), "large_quick_on_hand", +1),
+            "large_hand_decr_arrow": ((40, 115), "large_quick_on_hand", -1),
+            "large_par_incr_arrow":  ((230, 15), "large_quick_par", +1),
+            "large_par_decr_arrow":  ((230, 115), "large_quick_par", -1),
+            "small_hand_incr_arrow": ((40, 218), "small_quick_on_hand", +1),
+            "small_hand_decr_arrow": ((40, 318), "small_quick_on_hand", -1),
+            "small_par_incr_arrow":  ((230, 218), "small_quick_par", +1),
+            "small_par_decr_arrow":  ((230, 318), "small_quick_par", -1),
         },
         "walk_in": {
 
         },
         "reach_in": {
-            "line_hand_incr_arrow": ((40, 65), "line_mix_on_hand", +1),
-            "line_hand_decr_arrow": ((40, 120), "line_mix_on_hand", -1),
-            "line_par_incr_arrow": ((250, 65), "line_mix_par", +1),
-            "line_par_decr_arrow": ((250, 120), "line_mix_par", -1),
+            "line_hand_incr_arrow":  ((40, 15), "line_mix_on_hand", +1),
+            "line_hand_decr_arrow": ((40, 115), "line_mix_on_hand", -1),
+            "line_par_incr_arrow":  ((230, 15), "line_mix_par", +1),
+            "line_par_decr_arrow":  ((230, 115), "line_mix_par", -1),
         }
     },
     "large":{
         "quick": {
-            "large_hand_incr_arrow": ((40, 65), "large_quick_on_hand", +1),
-            "large_hand_decr_arrow": ((40, 120), "large_quick_on_hand", -1),
-            "large_par_incr_arrow":  ((250, 65), "large_quick_par", +1),
-            "large_par_decr_arrow":  ((250, 120), "large_quick_par", -1),
-            "small_hand_incr_arrow": ((40, 265), "small_quick_on_hand", +1),
-            "small_hand_decr_arrow": ((40, 320), "small_quick_on_hand", -1),
-            "small_par_incr_arrow":  ((250, 265), "small_quick_par", +1),
-            "small_par_decr_arrow":  ((250, 320), "small_quick_par", -1),
+            "large_hand_incr_arrow": ((40, 15), "large_quick_on_hand", +1),
+            "large_hand_decr_arrow": ((40, 115), "large_quick_on_hand", -1),
+            "large_par_incr_arrow":  ((230, 15), "large_quick_par", +1),
+            "large_par_decr_arrow":  ((230, 115), "large_quick_par", -1),
+            "small_hand_incr_arrow": ((40, 218), "small_quick_on_hand", +1),
+            "small_hand_decr_arrow": ((40, 318), "small_quick_on_hand", -1),
+            "small_par_incr_arrow":  ((230, 218), "small_quick_par", +1),
+            "small_par_decr_arrow":  ((230, 318), "small_quick_par", -1),
         },
         "walk_in": {
 
         },
         "reach_in": {
-            "line_hand_incr_arrow":  ((40, 65), "line_mix_on_hand", +1),
-            "line_hand_decr_arrow": ((40, 120), "line_mix_on_hand", -1),
-            "line_par_incr_arrow":  ((250, 65), "line_mix_par", +1),
-            "line_par_decr_arrow":  ((250, 120), "line_mix_par", -1),
+            "line_hand_incr_arrow":  ((40, 15), "line_mix_on_hand", +1),
+            "line_hand_decr_arrow": ((40, 115), "line_mix_on_hand", -1),
+            "line_par_incr_arrow":  ((230, 15), "line_mix_par", +1),
+            "line_par_decr_arrow":  ((230, 115), "line_mix_par", -1),
         }
     }
 }

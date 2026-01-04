@@ -384,8 +384,8 @@ class OutputBox:
         else:
             self.layout = output_box_layouts["large"]
         self.decr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "decr_arrow.png")).convert()
-        w = self.decr_arrow.surface.get_width() // 12
-        h = self.decr_arrow.surface.get_height() // 12
+        w = self.decr_arrow.surface.get_width() // 6
+        h = self.decr_arrow.surface.get_height() // 6
 
         self.decr_arrow.rect.width = w
         self.decr_arrow.rect.height = h
@@ -462,7 +462,9 @@ class OutputBox:
             if self.current_flavor and hasattr(self.current_flavor, token):
                 text = getattr(self.current_flavor, token, 0)
             else:
-                if "_" in token:
+                if token.startswith("_"):
+                    text = token.lstrip("_")
+                elif "_" in token:
                     text = 0
                 else:
                     text = token

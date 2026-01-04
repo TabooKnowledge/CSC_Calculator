@@ -263,8 +263,7 @@ class EventManager:
             self.focused_icon_sprite.depth = CONSTANTS.ICON_DEPTH
             self.focused_icon_sprite.icon.show_contents = False
 
-        sprite.icon.details_window.active = True#Altered in sprite
-        print("Window activated")
+        sprite.icon.details_window.active = True
         sprite.focused = True
         sprite.moving_home = False
         sprite.depth = CONSTANTS.FRONT_DEPTH
@@ -276,7 +275,7 @@ class EventManager:
         self.focused_icon_sprite.focused = False
         self.focused_icon_sprite.moving_home = True
         self.focused_icon_sprite.depth = CONSTANTS.ICON_DEPTH
-        self.focused_icon_sprite.icon.show_contents = False#Altered in Sprite.center_self, Checked in Icon
+        self.focused_icon_sprite.icon.show_contents = False
         self.focused_icon_sprite.icon.details_window.close = True
         self.focused_icon_sprite = None
 
