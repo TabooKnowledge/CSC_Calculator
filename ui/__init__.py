@@ -1,12 +1,12 @@
 import os
 import pygame
 from types import SimpleNamespace
-from pygame import mouse
 from config import CONSTANTS, output_box_layouts, OUTPUT_SCHEMAS, ARROW_SCHEMAS
 
 
 class DrawManager:
     def __init__(self, coordinator):
+        self.debug_canvas = None
         self.coordinator = coordinator
         self.registry = []
         self.canvas = None
@@ -26,6 +26,8 @@ class DrawManager:
     def update_canvas(self):
         self.coordinator.ui_manager.pygame.dynamic_canvas.fill(CONSTANTS.TRANSPARENT)
         self.canvas = self.coordinator.ui_manager.pygame.dynamic_canvas
+        self.coordinator.ui_manager.pygame.debug_canvas.fill(CONSTANTS.TRANSPARENT)
+        self.debug_canvas = self.coordinator.ui_manager.pygame.debug_canvas
 
     def draw_text_surface(self, sprite):
         sprite_center_x = sprite.x + sprite.w // 2
@@ -419,7 +421,8 @@ class OutputBox:
         lx = mx - wx
         ly = my - wy
         for arrow in self.arrows:
-            if arrow.rect.collidepoint(lx, ly):
+            arrow.hit_rect = arrow.rect.inflate(30,30)
+            if arrow.hit_rect.collidepoint(lx, ly):
                 value = getattr(self.current_flavor, arrow.attr, 0)
                 value += arrow.delta
                 value = max(0, min(15, value))
@@ -479,10 +482,12 @@ class OutputBox:
         for arrow in self.arrows:
             arrow.sprite.render = flag
 
+
 class Arrow:
     def __init__(self, output_box, rect, attr, delta, coord, name, image_name, surface):
         self.output_box = output_box
         self.rect = rect
+        self.hit_rect = None
         self.x = rect.left + self.output_box.window.output_x
         self.y = rect.top + self.output_box.window.output_y
         self.w = rect.width
@@ -501,6 +506,7 @@ class Arrow:
         self.sprite.y = self.y
         self.sprite.w = self.w
         self.sprite.h = self.h
+        self.hit_rect = pygame.Rect(self.sprite.x, self.sprite.y, self.sprite.w, self.sprite.h)
         self.sprite.depth = CONSTANTS.FRONT_DEPTH+1
         self.sprite.origin_depth = self.sprite.depth
         coord.draw_manager.subscribe(self.sprite)

@@ -84,7 +84,7 @@ class Flavor:
         self.line_mix_needed = max(0, self.line_mix_par - self.line_mix_on_hand)
 
     def calculate_total_mix_weight(self):
-        on_hand = self.large_quick_on_hand + self.small_quick_on_hand / 2 + self.line_mix_on_hand
+        on_hand = self.large_quick_on_hand + self.small_quick_on_hand // 2 + self.line_mix_on_hand
         self.total_mix_weight = math.ceil(self.totaled_par_weight - on_hand)
         self.total_ingredient_weight()
 

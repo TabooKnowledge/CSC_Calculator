@@ -234,9 +234,11 @@ class EventManager:
         elif _type == "flavor":
             self.set_focused_flavor(clicked)
 
-
-    def point_in_sprite(self, s,):
-            return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
+    def point_in_sprite(self, s):
+        if getattr(s, "arrow", None):
+            hit_rect = pygame.Rect(s.x, s.y, s.w, s.h).inflate(30,30)
+            return  hit_rect.collidepoint(self.event_pos.x, self.event_pos.y)
+        return (s.x <= self.event_pos.x <= s.x + s.w) and (s.y <= self.event_pos.y <= s.y + s.h)
 
     def refresh_flavors(self):
         if self.focused_icon_sprite is None:
@@ -340,7 +342,7 @@ class UiManager:
         self.scale = SimpleNamespace(x=0, y=0, image=1, multiplier=1, font=8)
         self.center = SimpleNamespace(x=0, y=0)
 
-        self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None)
+        self.pygame = SimpleNamespace(static_canvas=None, dynamic_canvas=None, screen=None, display_info=None, debug_canvas=None)
         self.font = None
 
         self.focused_sprite = None
@@ -351,23 +353,21 @@ class UiManager:
 
     def refresh_screen(self):
         self.pygame.screen.fill((0, 0, 0))
+        self.pygame.debug_canvas.fill((255, 0,255))
 
     def update(self):
         self.update_icons()
         self.draw_canvas()
 
-
-
     def draw_canvas(self):
         self.pygame.screen.blit(self.pygame.static_canvas, (0, 0))
         self.pygame.screen.blit(self.pygame.dynamic_canvas, (0, 0))
+        self.pygame.screen.blit(self.pygame.debug_canvas, (0, 0))
 
     def update_icons(self):
         for icon in self.icons_list:
             icon.toggle_show_contents()
-
             icon.details_window.update()
-
 
     def initialize(self):
         self.screen.display_info = pygame.display.Info()
@@ -379,6 +379,8 @@ class UiManager:
         self.pygame.static_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.pygame.dynamic_canvas = pygame.Surface(self.screen.dimensions).convert()
         self.pygame.dynamic_canvas.set_colorkey(CONSTANTS.TRANSPARENT)
+        self.pygame.debug_canvas = pygame.Surface(self.screen.dimensions).convert()
+        self.pygame.debug_canvas.set_colorkey(CONSTANTS.TRANSPARENT)
         pygame.display.set_caption("Chicken Salad Production Software")
         self.adjust_resolution()
         self.font = pygame.font.Font(None, int(self.scale.font))
@@ -493,17 +495,6 @@ class UiManager:
             button.origin_y = button.y
             button.origin_w = button.w
             button.origin_h = button.h
-
-    def draw_grid(self):
-        cols = self.screen.w // 30
-        rows = self.screen.h // 30
-        for c in range(cols):
-            x = c * 30
-            pygame.draw.line(self.pygame.screen, (255, 255, 255), (x, 0), (x, self.screen.h))
-        for r in range(rows):
-            y = r * 30
-            pygame.draw.line(self.pygame.screen, (255, 255, 255), (0, y), (self.screen.w, y))
-
 
 def build_flavor_set(coordinator, icon_name) -> list ["Flavor"]:
     if icon_name == "reach_in":
