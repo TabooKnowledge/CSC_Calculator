@@ -1,7 +1,7 @@
 import os
 import pygame
 from types import SimpleNamespace
-from config import CONSTANTS, output_box_layouts, OUTPUT_SCHEMAS, ARROW_SCHEMAS
+from config import CONSTANTS, output_box_layouts, OUTPUT_SCHEMAS, ARROW_SCHEMAS, EDIT_FIELDS
 
 
 class DrawManager:
@@ -90,6 +90,9 @@ class Sprite:
             self.center_self()
         elif self.moving_home:
             self.return_home()
+        if getattr(self.flavor, "recalculate", None):
+            for flavor in self.coordinator.prep_sheet.all_flavors:
+                self.flavor.calculate()
 
     def center_self(self):
         if not self.idle_focused:
@@ -248,9 +251,6 @@ class DetailsWindow:
             self.x = sprite.center_x
             self.y = sprite.center_y
 
-        w = int(max(self.w, self.max_w))
-        h = int(max(self.h, self.max_h))
-
         self.create_window()
         self.icon.coordinator.draw_manager.subscribe(self)
 
@@ -363,6 +363,7 @@ class DetailsWindow:
 
 class OutputBox:
     def __init__(self, window, font, res_type):
+        self.flavors_by_name = None
         self.click_targets = []
         self.res_type = res_type
         self.sprite_type = "modify"
@@ -381,19 +382,21 @@ class OutputBox:
         self.arrow_schema = ARROW_SCHEMAS[res_type][window.icon.name]
 
     def init(self):
+        self.decr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "decr_arrow.png")).convert()
+        self.incr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "incr_arrow.png")).convert()
         if self.res_type == "medium":
             self.layout = output_box_layouts["medium"]
+            w = self.decr_arrow.surface.get_width() // 6
+            h = self.decr_arrow.surface.get_height() // 6
         else:
             self.layout = output_box_layouts["large"]
-        self.decr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "decr_arrow.png")).convert()
-        w = self.decr_arrow.surface.get_width() // 6
-        h = self.decr_arrow.surface.get_height() // 6
+            w = self.decr_arrow.surface.get_width() // 6
+            h = self.decr_arrow.surface.get_height() // 6
 
         self.decr_arrow.rect.width = w
         self.decr_arrow.rect.height = h
         self.decr_arrow.surface = pygame.transform.scale(self.decr_arrow.surface, (w, h))
 
-        self.incr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "incr_arrow.png")).convert()
         self.incr_arrow.rect.width = w
         self.incr_arrow.rect.height = h
         self.incr_arrow.surface = pygame.transform.scale(self.incr_arrow.surface, (w, h))
@@ -411,51 +414,7 @@ class OutputBox:
                 self.dirty = True
         self.render()
 
-    def on_arrow_click(self, m_pos):
-        if self.current_flavor is None:
-            return
-
-        mx, my = m_pos
-        wx = self.window.output_x
-        wy = self.window.output_y
-        lx = mx - wx
-        ly = my - wy
-        for arrow in self.arrows:
-            arrow.hit_rect = arrow.rect.inflate(30,30)
-            if arrow.hit_rect.collidepoint(lx, ly):
-                value = getattr(self.current_flavor, arrow.attr, 0)
-                value += arrow.delta
-                value = max(0, min(15, value))
-                setattr(self.current_flavor, arrow.attr, value)
-                self.dirty = True
-                return
-
-    def build_arrows(self):
-        coordinator = self.window.icon.coordinator
-        w = self.decr_arrow.surface.get_width()
-        h = self.decr_arrow.surface.get_height()
-        def generate_arrow(label, schema):
-            x = schema[0][0]
-            y = schema[0][1]
-            rect = pygame.Rect(x, y, w, h)
-            attr = schema[1]
-            delta = schema[2]
-            if "incr" in label:
-                img_name = "incr_arrow.png"
-                surface = self.incr_arrow.surface
-            else:
-                img_name = "decr_arrow.png"
-                surface = self.decr_arrow.surface
-            arrow = Arrow(self, rect, attr, delta, coordinator, label, img_name, surface)
-            arrow.sprite.type = self.sprite_type
-            self.arrows.append(arrow)
-
-        for label, tup in self.arrow_schema.items():
-            generate_arrow(label, tup)
-
     def render(self):
-        if self.window.icon.name == "reach_in":
-            print("Found you")
         if not self.dirty:
             return
 
@@ -477,6 +436,52 @@ class OutputBox:
             self.surface.blit(surf, (x, y))
 
         self.dirty = False
+
+
+    def on_arrow_click(self, m_pos):
+        if self.current_flavor is None:
+            return
+
+        mx, my = m_pos
+        wx = self.window.output_x
+        wy = self.window.output_y
+        lx = mx - wx
+        ly = my - wy
+        for arrow in self.arrows:
+            arrow.hit_rect = arrow.rect.inflate(30,30)
+            if arrow.hit_rect.collidepoint(lx, ly):
+                flavor = self.flavors_by_name[self.current_flavor.name]
+                value = getattr(flavor, arrow.attr, 0)
+                value += arrow.delta
+                value = max(0, min(15, value))
+                setattr(flavor, arrow.attr, value)
+                setattr(self.current_flavor, arrow.attr, value)
+                flavor.calculate()
+                self.dirty = True
+                return
+
+    def build_arrows(self):
+        coordinator = self.window.icon.coordinator
+        w = self.decr_arrow.surface.get_width()
+        h = self.decr_arrow.surface.get_height()
+        def generate_arrow(_label, schema):
+            x = schema[0][0]
+            y = schema[0][1]
+            rect = pygame.Rect(x, y, w, h)
+            attr = schema[1]
+            delta = schema[2]
+            if "incr" in _label:
+                img_name = "incr_arrow.png"
+                surface = self.incr_arrow.surface
+            else:
+                img_name = "decr_arrow.png"
+                surface = self.decr_arrow.surface
+            arrow = Arrow(self, rect, attr, delta, coordinator, label, img_name, surface)
+            arrow.sprite.type = self.sprite_type
+            self.arrows.append(arrow)
+
+        for label, tup in self.arrow_schema.items():
+            generate_arrow(label, tup)
 
     def render_arrows(self, flag):
         for arrow in self.arrows:

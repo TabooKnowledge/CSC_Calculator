@@ -1,6 +1,7 @@
 import math
 from types import SimpleNamespace
-from config import ingredients_data
+from config import ingredients_data, CONSTANTS
+
 from ui import Sprite
 
 class Ingredient:
@@ -38,13 +39,17 @@ class Flavor:
         self.text_surface = None
         self.details_window = None
         #For production
+        self.recalculate = False
+        self.chicken_weight = 0
         self.large_quick_par = 0
         self.small_quick_par = 0
         self.line_mix_par = 0
+        self.line_mix_par_lbs = 0
         self.totaled_par_weight = 0
         self.large_quick_on_hand = 0
         self.small_quick_on_hand = 0
         self.line_mix_on_hand = 0
+        self.line_mix_on_hand_lbs = 0
         self.large_quick_needed = 0
         self.small_quick_needed = 0
         self.line_mix_needed = 0
@@ -60,8 +65,8 @@ class Flavor:
 
     def store_ingredients(self):
         for name in self.data.flavor.ingredients:
-            for ingredient in self.data.ingredients:
-                if ingredient == name:
+            for ingredient in self.coordinator.ingredients:
+                if ingredient.name == name:
                     self.ingredients.append(ingredient)
                     break
 
@@ -71,8 +76,18 @@ class Flavor:
         self.sprite.type = "flavor"
         self.sprite.initialize()
 
+    def calculate(self):
+        self.calculate_par_weight()
+        self.calculate_needed()
+        self.coordinator.prep_sheet.calculate_production_numbers()
+        self.recalculate = False
+        self.coordinator.state_store.save_state()
+        print(f"{self.name} calculated.")
+
     def calculate_par_weight(self):
-        self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par)
+        self.line_mix_on_hand_lbs = self.line_mix_on_hand*4
+        self.line_mix_par_lbs = self.line_mix_par*4
+        self.totaled_par_weight = math.ceil(self.large_quick_par + self.small_quick_par / 2 + self.line_mix_par_lbs)
 
     def calculate_needed(self):
         self.calculate_prep_numbers()
@@ -81,10 +96,10 @@ class Flavor:
     def calculate_prep_numbers(self):
         self.large_quick_needed = max(0, self.large_quick_par - self.large_quick_on_hand)
         self.small_quick_needed = max(0, self.small_quick_par - self.small_quick_on_hand)
-        self.line_mix_needed = max(0, self.line_mix_par - self.line_mix_on_hand)
+        self.line_mix_needed = max(0, self.line_mix_par_lbs - self.line_mix_on_hand_lbs)
 
     def calculate_total_mix_weight(self):
-        on_hand = self.large_quick_on_hand + self.small_quick_on_hand // 2 + self.line_mix_on_hand
+        on_hand = self.large_quick_on_hand + self.small_quick_on_hand / 2 + self.line_mix_on_hand_lbs
         self.total_mix_weight = math.ceil(self.totaled_par_weight - on_hand)
         self.total_ingredient_weight()
 
@@ -98,17 +113,34 @@ class Flavor:
 class PrepSheet:
     def __init__(self, coordinator):
         self.coordinator = coordinator
-        self.chicken_on_hand = 140
+        self.chicken_on_hand = 160
         self.chicken_par = 160
         self.total_chicken_used = 0
         self.chicken_remaining = 0
         self.chicken_to_cook = 0
-        self.all_flavors = None
+        self.all_flavors = []
+        self.flavors_by_name = None
+        self.kickn_flavors = ["Jalapeno Holly", "Buffalo Barclay", "Sassy Scotty"]
         self.error_not_enough_chicken = -1
+
+    def initialize(self):
+        self.all_flavors = build_flavor_set(self.coordinator, None)
+        self.flavors_by_name = {f.name: f for f in self.all_flavors}
+        for icon in self.coordinator.ui_manager.icons_list:
+            ob = icon.details_window.output_box
+            ob.flavors_by_name = self.flavors_by_name
 
     def calculate_production_numbers(self):
         self.total_chicken_used = 0
+        kickin_weight = self.flavors_by_name["Kickin' Kay Lynne"].total_mix_weight
+
         for flavor in self.all_flavors:
+            if flavor.name == "Kickin' Kay Lynne":
+                continue
+            if flavor.name in self.kickn_flavors:
+                flavor.calculate_total_mix_weight()
+                flavor.total_mix_weight += kickin_weight / 3
+                flavor.total_ingredient_weight()
             weight = flavor.total_mix_weight
             quarter_weight = weight / 4
             flavor.chicken_weight = round(weight - (quarter_weight * flavor.totaled_ingredient_weight), 2)
@@ -118,6 +150,7 @@ class PrepSheet:
             self.chicken_to_cook = self.chicken_par - self.chicken_remaining
         else:
             self.error_not_enough_chicken = 1
+        self.print_output()
 
     def print_output(self):
         for flavor in self.all_flavors:
@@ -139,3 +172,30 @@ class PrepSheet:
             print(f"Total chicken used: {math.ceil(self.total_chicken_used)}")
             print(f"Chicken remaining: {self.chicken_remaining}")
             print(f"Pans to cook: {math.ceil(self.chicken_to_cook / 10)}")
+
+
+def build_flavor_set(coordinator, icon_name) -> list ["Flavor"]:
+    if icon_name == "reach_in":
+        keys = CONSTANTS.REACH_IN_ORDER
+    elif icon_name == "quick":
+        keys = CONSTANTS.QUICK_ORDER
+    elif icon_name == "walk_in":
+        keys = CONSTANTS.WALK_IN_ORDER
+    else:
+        keys = CONSTANTS.REACH_IN_ORDER
+
+    flavors = []
+    sprites = []
+    flavors_by_name = {v.name: v for v in vars(coordinator.data.flavors).values()}
+    for key in keys:
+        attr_value = flavors_by_name.get(key)
+        if not attr_value:
+            continue
+        f = Flavor(coordinator, attr_value)
+        f.initialize()
+        f.load_sprite()
+        f.sprite.render = False
+        sprites.append(f.sprite)
+        flavors.append(f)
+    coordinator.ui_manager.scale_sprites(sprites)
+    return flavors

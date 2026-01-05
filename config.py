@@ -1,11 +1,12 @@
 import os
 from types import SimpleNamespace
-import pygame
 
 
 CONSTANTS = SimpleNamespace()
 CONSTANTS.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONSTANTS.IMAGE_DIR = os.path.join(CONSTANTS.SCRIPT_DIR, "images")
+CONSTANTS.SAVE_DIR = os.path.join(CONSTANTS.SCRIPT_DIR, "state")
+CONSTANTS.SAVE_FILE = os.path.join(CONSTANTS.SAVE_DIR, "save.json")
 CONSTANTS.FRONT_DEPTH = 10000
 CONSTANTS.ICON_DEPTH = 2000
 CONSTANTS.BUTTON_DEPTH = 1000
@@ -203,5 +204,28 @@ ARROW_SCHEMAS = {
             "line_par_incr_arrow":  ((230, 15), "line_mix_par", +1),
             "line_par_decr_arrow":  ((230, 115), "line_mix_par", -1),
         }
+    }
+}
+
+
+EDIT_FIELDS = (
+    "large_quick_on_hand",
+    "small_quick_on_hand",
+    "line_mix_on_hand",
+    "large_quick_par",
+    "small_quick_par",
+    "line_mix_par",
+)
+
+STATE_FIELDS = {
+    "quick":{
+        "large_quick_on_hand",
+        "small_quick_on_hand",
+        "large_quick_par",
+        "small_quick_par",
+    },
+    "reach_in":{
+        "line_mix_on_hand",
+        "line_mix_par",
     }
 }

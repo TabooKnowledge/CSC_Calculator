@@ -1,9 +1,10 @@
 import pygame
 import sys
-from config import *
+from types import SimpleNamespace
+from config import flavors_data, ingredients_data, icons_data, buttons_data
 from domain import initialize_ingredients, PrepSheet
 from ui import DrawManager, Background
-from engine import EventManager, AnimationManager, UiManager
+from engine import EventManager, AnimationManager, UiManager, StateStore
 
 
 pygame.init()
@@ -21,6 +22,7 @@ class Coordinator:
         self.grid = None
         self.prep_sheet = None
         self.ui_manager = None
+        self.state_store = None
         #Lists
         self.ingredients = []
         self.flavors = []
@@ -46,9 +48,12 @@ class Coordinator:
         self.event_manager = EventManager(self)
         self.ui_manager = UiManager(self)
         self.background = Background(self)
+        self.state_store = StateStore(self)
 
     def initialize_classes(self):
         self.ui_manager.initialize()
+        self.prep_sheet.initialize()
+        self.state_store.initialize()
         self.background.initialize()
 
     def main_loop(self):
