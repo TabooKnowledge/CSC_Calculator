@@ -387,20 +387,28 @@ class OutputBox:
         self.incr_arrow_right.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR,"incr_arrow_right.png")).convert()
         if self.res_type == "medium":
             self.layout = output_box_layouts["medium"]
-            w = self.decr_arrow.surface.get_width() // 6
-            h = self.decr_arrow.surface.get_height() // 6
+            w = self.decr_arrow_left.surface.get_width() // 6
+            h = self.decr_arrow_left.surface.get_height() // 6
+            self.decr_arrow_left.rect.width = w
+            self.decr_arrow_left.rect.height = h
+            self.decr_arrow_left.surface = pygame.transform.scale(self.decr_arrow_left.surface, (w, h))
+
+            self.incr_arrow_right.rect.width = w
+            self.incr_arrow_right.rect.height = h
+            self.incr_arrow_right.surface = pygame.transform.scale(self.incr_arrow_right.surface, (w, h))
+
         else:
             self.layout = output_box_layouts["large"]
             w = self.decr_arrow.surface.get_width() // 6
             h = self.decr_arrow.surface.get_height() // 6
 
-        self.decr_arrow.rect.width = w
-        self.decr_arrow.rect.height = h
-        self.decr_arrow.surface = pygame.transform.scale(self.decr_arrow.surface, (w, h))
+            self.decr_arrow.rect.width = w
+            self.decr_arrow.rect.height = h
+            self.decr_arrow.surface = pygame.transform.scale(self.decr_arrow.surface, (w, h))
 
-        self.incr_arrow.rect.width = w
-        self.incr_arrow.rect.height = h
-        self.incr_arrow.surface = pygame.transform.scale(self.incr_arrow.surface, (w, h))
+            self.incr_arrow.rect.width = w
+            self.incr_arrow.rect.height = h
+            self.incr_arrow.surface = pygame.transform.scale(self.incr_arrow.surface, (w, h))
 
         self.build_arrows()
 
@@ -474,10 +482,10 @@ class OutputBox:
             if self.res_type == "medium":
                 if "incr" in _label:
                     img_name = "incr_arrow_right.png"
-                    surface = self.incr_arrow.surface
+                    surface = self.incr_arrow_right.surface
                 else:
                     img_name = "decr_arrow_left.png"
-                    surface = self.decr_arrow.surface
+                    surface = self.decr_arrow_left.surface
             else:
                 if "incr" in _label:
                     img_name = "incr_arrow.png"
