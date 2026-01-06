@@ -326,6 +326,7 @@ class UiManager:
         self.buttons_data = buttons_data
         self.icons_data = icons_data
         self.resolution_profiles = resolution_profiles
+        self.res_type = None
         self.active_profile = None
 
         self.icons_list = []
@@ -390,9 +391,10 @@ class UiManager:
         self.set_resolution_data()
 
     def retrieve_resolution_data(self):
-        for attr_value in vars(self.resolution_profiles).values():
+        for attr, attr_value in vars(self.resolution_profiles).items():
             if self.screen.short <= attr_value.max_short:
                 self.active_profile = attr_value
+                self.res_type = attr
                 break
 
     def set_resolution_data(self):
@@ -484,12 +486,17 @@ class UiManager:
     def layout_buttons(self):
         for i, button in enumerate(self.buttons_list):
             if button.name == "excel":
-                button.x = self.screen.w - button.w - 8
-                button.y = self.screen.h - button.h - 8
+                if self.res_type == "medium":
+                    button.y = self.screen.h - button.h * 2.5
+                else:
+                    button.y = self.screen.h - button.h - 8
+
+                button.x = self.screen.w // 2 - button.w // 2
                 button.type = "icon"
             else:
                 button.x = self.icons_list[i].sprite.x
                 button.y = self.icons_list[i].sprite.y + self.icons_list[i].sprite.h
+
             button.origin_x = button.x
             button.origin_y = button.y
             button.origin_w = button.w

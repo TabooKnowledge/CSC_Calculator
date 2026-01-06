@@ -370,6 +370,8 @@ class OutputBox:
         self.bg = SimpleNamespace(img_name=None, surface=None)
         self.decr_arrow = SimpleNamespace(img_name="decr_arrow.png", surface=None, rect=pygame.Rect(0,0,0,0))
         self.incr_arrow = SimpleNamespace(img_name="incr_arrow.png", surface=None, rect=pygame.Rect(0,0,0,0))
+        self.decr_arrow_left = SimpleNamespace(img_name="decr_arrow_left.png", surface=None, rect=pygame.Rect(0,0,0,0))
+        self.incr_arrow_right = SimpleNamespace(img_name="incr_arrow_right.png", surface=None, rect=pygame.Rect(0,0,0,0))
         self.arrows = []
         self.current_flavor = None
         self.layout = None
@@ -381,6 +383,8 @@ class OutputBox:
     def init(self):
         self.decr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "decr_arrow.png")).convert()
         self.incr_arrow.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR, "incr_arrow.png")).convert()
+        self.decr_arrow_left.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR,"decr_arrow_left.png")).convert()
+        self.incr_arrow_right.surface = pygame.image.load(os.path.join(CONSTANTS.IMAGE_DIR,"incr_arrow_right.png")).convert()
         if self.res_type == "medium":
             self.layout = output_box_layouts["medium"]
             w = self.decr_arrow.surface.get_width() // 6
@@ -467,12 +471,20 @@ class OutputBox:
             rect = pygame.Rect(x, y, w, h)
             attr = schema[1]
             delta = schema[2]
-            if "incr" in _label:
-                img_name = "incr_arrow.png"
-                surface = self.incr_arrow.surface
+            if self.res_type == "medium":
+                if "incr" in _label:
+                    img_name = "incr_arrow_right.png"
+                    surface = self.incr_arrow.surface
+                else:
+                    img_name = "decr_arrow_left.png"
+                    surface = self.decr_arrow.surface
             else:
-                img_name = "decr_arrow.png"
-                surface = self.decr_arrow.surface
+                if "incr" in _label:
+                    img_name = "incr_arrow.png"
+                    surface = self.incr_arrow.surface
+                else:
+                    img_name = "decr_arrow.png"
+                    surface = self.decr_arrow.surface
             arrow = Arrow(self, rect, attr, delta, coordinator, label, img_name, surface)
             arrow.sprite.type = self.sprite_type
             self.arrows.append(arrow)
