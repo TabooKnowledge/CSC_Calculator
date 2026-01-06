@@ -90,9 +90,6 @@ class Sprite:
             self.center_self()
         elif self.moving_home:
             self.return_home()
-        if getattr(self.flavor, "recalculate", None):
-            for flavor in self.coordinator.prep_sheet.all_flavors:
-                self.flavor.calculate()
 
     def center_self(self):
         if not self.idle_focused:
@@ -405,12 +402,14 @@ class OutputBox:
 
     def update(self):
         focused_flavor_sprite = self.window.icon.coordinator.event_manager.focused_flavor_sprite
+
         if focused_flavor_sprite is None:
             self.current_flavor = None
             self.dirty = True
         else:
-            if self.current_flavor is not focused_flavor_sprite:
-                self.current_flavor = focused_flavor_sprite.flavor
+            canonical = self.window.icon.coordinator.prep_sheet.flavors_by_name[focused_flavor_sprite.flavor.name]
+            if self.current_flavor is not canonical:
+                self.current_flavor = canonical
                 self.dirty = True
         self.render()
 
@@ -450,13 +449,11 @@ class OutputBox:
         for arrow in self.arrows:
             arrow.hit_rect = arrow.rect.inflate(30,30)
             if arrow.hit_rect.collidepoint(lx, ly):
-                flavor = self.flavors_by_name[self.current_flavor.name]
-                value = getattr(flavor, arrow.attr, 0)
+                value = getattr(self.current_flavor, arrow.attr, 0)
                 value += arrow.delta
                 value = max(0, min(15, value))
-                setattr(flavor, arrow.attr, value)
                 setattr(self.current_flavor, arrow.attr, value)
-                flavor.calculate()
+                self.current_flavor.calculate()
                 self.dirty = True
                 return
 

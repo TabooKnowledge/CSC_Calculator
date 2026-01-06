@@ -11,9 +11,9 @@ CONSTANTS.FRONT_DEPTH = 10000
 CONSTANTS.ICON_DEPTH = 2000
 CONSTANTS.BUTTON_DEPTH = 1000
 CONSTANTS.BACKGROUND_DEPTH = -1000
-CONSTANTS.REACH_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
-CONSTANTS.QUICK_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
-CONSTANTS.WALK_IN_ORDER = ["Olivia's Old South", "Jalapeno Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin' Kay Lynne", "Cranberry Kelli", "Barbecue", "Lauryn's Lemon Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
+CONSTANTS.REACH_IN_ORDER = ["Olivia's Old South", "Jalapeño Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin Kay Lynne", "Cranberry Kelli", "Barbie Q", "Lauryn's L. Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
+CONSTANTS.QUICK_ORDER = ["Olivia's Old South", "Jalapeño Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin Kay Lynne", "Cranberry Kelli", "Barbie Q", "Lauryn's L. Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
+CONSTANTS.WALK_IN_ORDER = ["Olivia's Old South", "Jalapeño Holly", "Dixie Chick", "Buffalo Barclay", "Sassy Scotty", "Kickin Kay Lynne", "Cranberry Kelli", "Barbie Q", "Lauryn's L. Basil", "Classic Carol", "Fancy Nancy", "Fruity Fran"]
 CONSTANTS.TRANSPARENT = (255, 0, 255)
 CONSTANTS.WINDOW_COLOR = (110,158,179)
 
@@ -54,7 +54,7 @@ flavors_data = SimpleNamespace(
     frutiy_fran=SimpleNamespace(
         name="Fruity Fran", ingredients=["Pineapples", "Pecans", "Grapes"], img_name="fruity_fran.png"),
     lauryns=SimpleNamespace(
-        name="Lauryn's Lemon Basil", ingredients=["Apples", "Pecans", "Grapes"], img_name="lauryns_lemon_basil.png"),
+        name="Lauryn's L. Basil", ingredients=["Apples", "Pecans", "Grapes"], img_name="lauryns_lemon_basil.png"),
     classic_carol=SimpleNamespace(
         name="Classic Carol", ingredients=["Classic"], img_name="classic_carol.png"),
     sassy_scotty=SimpleNamespace(
@@ -62,14 +62,15 @@ flavors_data = SimpleNamespace(
     olivas_old_south=SimpleNamespace(
         name="Olivia's Old South", ingredients=["Sweet Relish", "Eggs"], img_name="olivias_old_south.png"),
     jalapeno_holly=SimpleNamespace(
-        name="Jalapeno Holly", ingredients=["Jalapenos"], img_name="jalapeno_holly.png"),
+        name="Jalapeño Holly", ingredients=["Jalapenos"], img_name="jalapeno_holly.png"),
     buffalo_barclay=SimpleNamespace(
         name="Buffalo Barclay", ingredients=["Buffalo"], img_name="buffalo_barclay.png"),
     barbecue=SimpleNamespace(
-        name="Barbecue", ingredients=["Barbecue"], img_name="barbecue.png"),
+        name="Barbie Q", ingredients=["Barbecue"], img_name="barbecue.png"),
     dixie_chick=SimpleNamespace(
         name="Dixie Chick", ingredients=["Onions"], img_name="dixie_chick.png"),
-    kickin_kay_lynne=SimpleNamespace(name="Kickin' Kay Lynne", ingredients=["Kickin"], img_name="kickin_kay_lynne.png"),
+    kickin_kay_lynne=SimpleNamespace(
+        name="Kickin Kay Lynne", ingredients=["Kickin"], img_name="kickin_kay_lynne.png"),
 )
 
 
@@ -81,7 +82,7 @@ icons_data =  SimpleNamespace(
 
 
 buttons_data = SimpleNamespace(
-            production=SimpleNamespace(name="production", image_name="button_production_idle.png", state_tag="production"),
+            excel=SimpleNamespace(name="excel", image_name="excel_icon.png", state_tag="excel"),
             reach_in=SimpleNamespace(name="reach_in", image_name="button_reach_in_idle.png", state_tag="reach_in"),
             walk_in=SimpleNamespace(name="walk_in", image_name="button_walk_in_idle.png", state_tag="walk_in"),
             quick=SimpleNamespace(name="quick", image_name="button_quick_idle.png", state_tag="quick"),
@@ -228,4 +229,37 @@ STATE_FIELDS = {
         "line_mix_on_hand",
         "line_mix_par",
     }
+}
+
+SECTION_MAP = {
+    "small_quick_chick": {
+        "flavor": "A",
+        "par": "C",
+        "on_hand": "D"
+    },
+    "large_quick_chick": {
+        "flavor": "G",
+        "par": "I",
+        "on_hand": "J"
+    },
+    "line": {
+        "flavor": "N",
+        "par": "P",
+        "on_hand": "Q"
+    }
+}
+
+FLAVOR_ROW_MAP = {
+    "Barbie Q": 6,
+    "Buffalo Barclay": 7,
+    "Classic Carol": 8,
+    "Cranberry Kelli": 9,
+    "Dixie Chick": 10,
+    "Fancy Nancy": 11,
+    "Fruity Fran": 12,
+    "Jalapeño Holly": 13,
+    "Kickin Kay Lynne": 14,
+    "Lauryn's L. Basil": 15,
+    "Olivia's Old South": 17,
+    "Sassy Scotty": 18,
 }

@@ -1,126 +1,98 @@
 {
-  "reach_in": {
-    "Olivia's Old South": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Jalapeno Holly": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Dixie Chick": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Buffalo Barclay": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Sassy Scotty": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Kickin' Kay Lynne": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Cranberry Kelli": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Barbecue": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Lauryn's Lemon Basil": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Classic Carol": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Fancy Nancy": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    },
-    "Fruity Fran": {
-      "line_mix_on_hand": 0,
-      "line_mix_par": 0
-    }
+  "Olivia's Old South": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 4,
+    "small_quick_par": 4,
+    "line_mix_par": 3
   },
-  "quick": {
-    "Olivia's Old South": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 1,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Jalapeno Holly": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Dixie Chick": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Buffalo Barclay": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Sassy Scotty": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Kickin' Kay Lynne": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Cranberry Kelli": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Barbecue": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Lauryn's Lemon Basil": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Classic Carol": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Fancy Nancy": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    },
-    "Fruity Fran": {
-      "large_quick_on_hand": 0,
-      "small_quick_par": 0,
-      "small_quick_on_hand": 0,
-      "large_quick_par": 0
-    }
+  "Jalape\u00f1o Holly": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 5,
+    "small_quick_par": 5,
+    "line_mix_par": 4
+  },
+  "Dixie Chick": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 4,
+    "small_quick_par": 4,
+    "line_mix_par": 3
+  },
+  "Buffalo Barclay": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 3,
+    "small_quick_par": 3,
+    "line_mix_par": 3
+  },
+  "Sassy Scotty": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 5,
+    "small_quick_par": 5,
+    "line_mix_par": 4
+  },
+  "Kickin Kay Lynne": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 2,
+    "small_quick_par": 2,
+    "line_mix_par": 3
+  },
+  "Cranberry Kelli": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 6,
+    "small_quick_par": 6,
+    "line_mix_par": 4
+  },
+  "Barbie Q": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 2,
+    "small_quick_par": 2,
+    "line_mix_par": 2
+  },
+  "Lauryn's L. Basil": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 3,
+    "small_quick_par": 3,
+    "line_mix_par": 3
+  },
+  "Classic Carol": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 12,
+    "small_quick_par": 9,
+    "line_mix_par": 7
+  },
+  "Fancy Nancy": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 13,
+    "small_quick_par": 9,
+    "line_mix_par": 7
+  },
+  "Fruity Fran": {
+    "large_quick_on_hand": 0,
+    "small_quick_on_hand": 0,
+    "line_mix_on_hand": 0,
+    "large_quick_par": 4,
+    "small_quick_par": 4,
+    "line_mix_par": 3
   }
 }

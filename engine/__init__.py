@@ -3,7 +3,7 @@ import json
 import pygame
 from types import SimpleNamespace
 from ui import Sprite, Icon, DetailsWindow
-from config import buttons_data, icons_data, resolution_profiles, CONSTANTS, STATE_FIELDS
+from config import buttons_data, icons_data, resolution_profiles, CONSTANTS, STATE_FIELDS, EDIT_FIELDS
 from domain import build_flavor_set
 
 
@@ -108,7 +108,6 @@ class EventManager:
                 "exit": self.exit,
                 "pointer_down": self.check_clicked,
                 "pointer_moving": self.move_sprite,
-
             },
             "container_open": {
                 "exit": self.exit,
@@ -157,12 +156,15 @@ class EventManager:
         if self.event.type == pygame.QUIT:
             self.active_event = self.active_state["exit"]
         elif self.event.type == pygame.KEYDOWN:
-            if self.event.key == pygame.K_ESCAPE:
+            if self.event.key == pygame.K_LCTRL:
+                self.coordinator.prep_sheet.export_to_excel()
+            elif self.event.key == pygame.K_ESCAPE:
                 self.active_event = self.active_state["exit"]
         elif self.event.type == pygame.MOUSEBUTTONDOWN or self.event.type == pygame.FINGERDOWN:
             self.active_event = self.active_state["pointer_down"]
         elif self.event.type == pygame.MOUSEMOTION or self.event.type == pygame.FINGERMOTION:
             self.active_event = self.active_state["pointer_moving"]
+
 
     def execute_event(self):
         if self.active_event is not None:
@@ -215,6 +217,9 @@ class EventManager:
 
         clicked = max(hits, key=z_keys)
 
+        if clicked.name == "excel":
+            self.coordinator.prep_sheet.calculate_production_numbers(output=True)
+            return
         if _type == "modify":
             if clicked.type == "modify":
                 self.focused_icon_sprite.icon.details_window.output_box.on_arrow_click(
@@ -249,7 +254,6 @@ class EventManager:
         if sprite.moving_home:
             return
 
-        print(f"State set to container_open")
         self.state = "container_open"
 
         if self.focused_icon_sprite and self.focused_icon_sprite is not sprite:
@@ -278,7 +282,6 @@ class EventManager:
         if sprite.moving_home:
             return
 
-        print(f"State set to flavor_focused")
         self.state = "flavor_focused"
 
         if self.focused_flavor_sprite and self.focused_flavor_sprite is not sprite:
@@ -298,7 +301,6 @@ class EventManager:
                 self.reset_to_main()
                 return
 
-        print(f"State set to container_open")
         self.state = "container_open"
 
         self.focused_flavor_sprite.focused = False
@@ -311,7 +313,6 @@ class EventManager:
         self.unfocus_current_icon()
         self.active_state = self.state_dict["main"]
         self.state = "main"
-        print("State was set to main")
 
     def move_sprite(self, *args, **kwargs):
         if self.dragged_sprite:
@@ -424,7 +425,7 @@ class UiManager:
             i.position_content()
 
     def populate_button_list(self):
-        ordered_keys = ["reach_in", "quick", "walk_in"]
+        ordered_keys = ["reach_in", "quick", "walk_in", "excel"]
         for key in ordered_keys:
             data = getattr(self.buttons_data, key)
             button = Sprite(self.coordinator, data.name, data.image_name)
@@ -482,8 +483,13 @@ class UiManager:
 
     def layout_buttons(self):
         for i, button in enumerate(self.buttons_list):
-            button.x = self.icons_list[i].sprite.x
-            button.y = self.icons_list[i].sprite.y + self.icons_list[i].sprite.h
+            if button.name == "excel":
+                button.x = self.screen.w - button.w - 8
+                button.y = self.screen.h - button.h - 8
+                button.type = "icon"
+            else:
+                button.x = self.icons_list[i].sprite.x
+                button.y = self.icons_list[i].sprite.y + self.icons_list[i].sprite.h
             button.origin_x = button.x
             button.origin_y = button.y
             button.origin_w = button.w
@@ -496,10 +502,7 @@ class StateStore:
         self.flavors_by_name = {}
 
     def initialize(self):
-        for icon in self.coordinator.ui_manager.icons_list:
-            new_flavors = {f.name: f for f in icon.contents}
-            self.flavors_by_name[icon.name] = new_flavors
-
+        self.flavors_by_name = self.coordinator.prep_sheet.flavors_by_name
         self.load_state()
 
     def load_state(self):
@@ -515,69 +518,27 @@ class StateStore:
         if not isinstance(data, dict):
             return False
 
-        for container, flavors_data in data.items():
-            if container not in self.flavors_by_name:
+        for flavor_name, attrs in data.items():
+            flavor = self.coordinator.prep_sheet.flavors_by_name.get(flavor_name)
+            if flavor is None or not isinstance(attrs, dict):
                 continue
-            if not isinstance(flavors_data, dict):
-                continue
 
-            for flavor_name, attrs in flavors_data.items():
-                flavor = self.flavors_by_name[container].get(flavor_name)
-                if flavor is None:
-                    continue
-                canonical = self.coordinator.prep_sheet.flavors_by_name.get(flavor_name)
-                if canonical is None:
-                    continue
-                if not isinstance(attrs, dict):
-                    continue
-
-                allowed = STATE_FIELDS.get(container, ())
-                for attr, value in attrs.items():
-                    if attr not in allowed:
-                        continue
-                    if hasattr(flavor, attr):
-                        setattr(flavor, attr, value)
-                    if hasattr(canonical, attr):
-                        setattr(canonical, attr, value)
-
-                if hasattr(flavor, "calculate"):
-                    flavor.calculate()
-                if hasattr(canonical, "calculate"):
-                    canonical.calculate()
-
-            self.coordinator.prep_sheet.calculate_production_numbers()
-
+            for attr, value in attrs.items():
+                if attr in EDIT_FIELDS and hasattr(flavor, attr):
+                    setattr(flavor, attr, value)
+            flavor.calculate()
+        self.coordinator.prep_sheet.calculate_production_numbers(output=False)
         return True
-
-    def apply_loaded_state_to_canonical(self):
-        for container, flavors in self.flavors_by_name.items():
-            allowed = STATE_FIELDS.get(container, ())
-            for name, ui_flavor in flavors.items():
-                canonical = self.coordinator.prep_sheet.flavors_by_name.get(name)
-                if not canonical:
-                    continue
-                for attr in allowed:
-                    if hasattr(ui_flavor, attr) and hasattr(canonical, attr):
-                        setattr(canonical, attr, getattr(ui_flavor, attr))
-
-        self.coordinator.prep_sheet.calculate_production_numbers()
-
 
     def save_state(self):
         save_data = {}
-        for container, flavors in self.flavors_by_name.items():
-            fields = STATE_FIELDS.get(container)
-            if not fields:
-                continue
 
-            save_data.setdefault(container, {})
-
-            for flavor in flavors.values():
-                save_data[container].setdefault(flavor.name, {})
-                for attr in fields:
-                    if not hasattr(flavor, attr):
-                        raise AttributeError(f"{flavor.name} has no attribute {attr}")
-                    save_data[container][flavor.name][attr] = getattr(flavor, attr)
+        for name, flavor in self.flavors_by_name.items():
+            save_data.setdefault(name, {})
+            for attr in EDIT_FIELDS:
+                if not hasattr(flavor, attr):
+                    raise AttributeError(f"{flavor.name} has no attribute {attr}")
+                save_data[name][attr] = getattr(flavor, attr)
 
         self.write_to_save(save_data)
 

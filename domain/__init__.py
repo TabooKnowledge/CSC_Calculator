@@ -1,6 +1,10 @@
 import math
+import os
+import traceback
+from openpyxl import load_workbook
+from datetime import datetime
 from types import SimpleNamespace
-from config import ingredients_data, CONSTANTS
+from config import ingredients_data, CONSTANTS, SECTION_MAP, FLAVOR_ROW_MAP
 
 from ui import Sprite
 
@@ -79,10 +83,9 @@ class Flavor:
     def calculate(self):
         self.calculate_par_weight()
         self.calculate_needed()
-        self.coordinator.prep_sheet.calculate_production_numbers()
+        self.coordinator.prep_sheet.calculate_production_numbers(output=False)
         self.recalculate = False
         self.coordinator.state_store.save_state()
-        print(f"{self.name} calculated.")
 
     def calculate_par_weight(self):
         self.line_mix_on_hand_lbs = self.line_mix_on_hand*4
@@ -121,7 +124,13 @@ class PrepSheet:
         self.all_flavors = []
         self.flavors_by_name = None
         self.kickn_flavors = ["Jalapeno Holly", "Buffalo Barclay", "Sassy Scotty"]
-        self.error_not_enough_chicken = -1
+        self.error_not_enough_chicken = False
+        self.section_map = SECTION_MAP
+        self.flavor_row_map = FLAVOR_ROW_MAP
+        self.xl_path = "excel/production_sheet.xlsx"
+        self.save_path = "excel/production_output.xlsx"
+        self.workbook = load_workbook(self.xl_path, data_only=False)
+        self.worksheet = self.workbook["Production Guide"]
 
     def initialize(self):
         self.all_flavors = build_flavor_set(self.coordinator, None)
@@ -130,12 +139,14 @@ class PrepSheet:
             ob = icon.details_window.output_box
             ob.flavors_by_name = self.flavors_by_name
 
-    def calculate_production_numbers(self):
+    def calculate_production_numbers(self, output=True):
         self.total_chicken_used = 0
-        kickin_weight = self.flavors_by_name["Kickin' Kay Lynne"].total_mix_weight
+        kickin = self.flavors_by_name["Kickin Kay Lynne"]
+        kickin.calculate_total_mix_weight()
+        kickin_weight = kickin.total_mix_weight
 
         for flavor in self.all_flavors:
-            if flavor.name == "Kickin' Kay Lynne":
+            if flavor.name == "Kickin Kay Lynne":
                 continue
             if flavor.name in self.kickn_flavors:
                 flavor.calculate_total_mix_weight()
@@ -149,11 +160,42 @@ class PrepSheet:
             self.chicken_remaining = self.chicken_on_hand - math.ceil(self.total_chicken_used)
             self.chicken_to_cook = self.chicken_par - self.chicken_remaining
         else:
-            self.error_not_enough_chicken = 1
-        self.print_output()
+            self.error_not_enough_chicken = True
+        if output:
+            self.print_output()
+            self.export_to_excel()
+
+    def export_to_excel(self):
+        for section, cols in self.section_map.items():
+            for name, flavor in self.flavors_by_name.items():
+                row = self.flavor_row_map.get(name)
+                if row is None:
+                    continue
+
+                if section == "small_quick_chick":
+                    par_value = flavor.small_quick_par
+                    on_hand_value = flavor.small_quick_on_hand
+                elif section == "large_quick_chick":
+                    par_value = flavor.large_quick_par
+                    on_hand_value = flavor.large_quick_on_hand
+                elif section == "line":
+                    par_value = flavor.line_mix_par
+                    on_hand_value = flavor.line_mix_on_hand
+                else:
+                    continue
+
+                self.worksheet[f"{cols['par']}{row}"].value = par_value
+                self.worksheet[f"{cols['on_hand']}{row}"].value = on_hand_value
+
+        os.makedirs("exports", exist_ok=True)
+        stamp = datetime.now().strftime("%Y-%m-%d")
+        out_path = f"exports/production_{stamp}.xlsx"
+        self.workbook.save(out_path)
+        return out_path
+
 
     def print_output(self):
-        for flavor in self.all_flavors:
+        for name, flavor in self.flavors_by_name.items():
             print(f"\n**********{flavor.name}***********")
             print(f"Total mix weight: {flavor.total_mix_weight}")
             print(f"Large Quicks Needed: {flavor.large_quick_needed}")
@@ -162,11 +204,12 @@ class PrepSheet:
             print(f"Chicken weight {flavor.chicken_weight}")
             for ingredient in flavor.ingredients:
                 print(f"{ingredient.name} weight {ingredient.totaled_weight}")
-        if self.error_not_enough_chicken == 1:
+        if self.error_not_enough_chicken:
             print("\n********** ERROR **********")
             print(f"Total chicken used exceeds chicken on hand!!!")
             print(f"Chicken on hand: {self.chicken_on_hand}")
             print(f"Total chicken used: {math.ceil(self.total_chicken_used)}")
+            self.error_not_enough_chicken = False
         else:
             print("\n********** Summary **********")
             print(f"Total chicken used: {math.ceil(self.total_chicken_used)}")
@@ -199,3 +242,5 @@ def build_flavor_set(coordinator, icon_name) -> list ["Flavor"]:
         flavors.append(f)
     coordinator.ui_manager.scale_sprites(sprites)
     return flavors
+
+
