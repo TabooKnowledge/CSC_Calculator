@@ -90,9 +90,12 @@ class AnimationManager:
 
 class EventManager:
     def __init__(self, coordinator):
+
         self.last_flavor_sprite = None
         self.coordinator = coordinator
         self.dragged_sprite = None
+        self.offset_x = None
+        self.offset_y = None
         self.focused_icon_sprite = None
         self.focused_flavor_sprite = None
         self.sprite_transitioning = False
@@ -199,6 +202,8 @@ class EventManager:
             return
 
         self.dragged_sprite = clicked
+        self.offset_x = self.event_pos.x - clicked.x
+        self.offset_y = self.event_pos.y - clicked.y
 
     def check_clicked(self, *args, **kwargs):
         _type = kwargs.get("type")
@@ -340,8 +345,8 @@ class EventManager:
 
     def move_sprite(self, *args, **kwargs):
         if self.dragged_sprite:
-            self.dragged_sprite.x = self.event_pos.x - self.dragged_sprite.w // 2
-            self.dragged_sprite.y = self.event_pos.y - self.dragged_sprite.h // 2
+            self.dragged_sprite.x = self.event_pos.x - self.offset_x
+            self.dragged_sprite.y = self.event_pos.y - self.offset_y
 
 
 class UiManager:
