@@ -108,16 +108,19 @@ class EventManager:
                 "exit": self.exit,
                 "pointer_down": self.check_clicked,
                 "pointer_moving": self.move_sprite,
+                "pointer_up": self.undrag
             },
             "container_open": {
                 "exit": self.exit,
                 "pointer_down": self.check_clicked,
                 "pointer_moving": self.move_sprite,
+                "pointer_up": self.undrag
             },
             "flavor_focused": {
                 "exit": self.exit,
-                "pointer_down": self.check_clicked,
+                "pointer_down": self.check_dragged,
                 "pointer_moving": self.move_sprite,
+                "pointer_up": self.undrag
             }
         }
 
@@ -156,15 +159,16 @@ class EventManager:
         if self.event.type == pygame.QUIT:
             self.active_event = self.active_state["exit"]
         elif self.event.type == pygame.KEYDOWN:
-            if self.event.key == pygame.K_LCTRL:
-                self.coordinator.prep_sheet.export_to_excel()
-            elif self.event.key == pygame.K_ESCAPE:
+            if self.event.key == pygame.K_ESCAPE:
                 self.active_event = self.active_state["exit"]
         elif self.event.type == pygame.MOUSEBUTTONDOWN or self.event.type == pygame.FINGERDOWN:
+            for s in self.coordinator.draw_manager.registry:
+                print(f"{s.name} X: {s.x}, Y: {s.y}")
             self.active_event = self.active_state["pointer_down"]
         elif self.event.type == pygame.MOUSEMOTION or self.event.type == pygame.FINGERMOTION:
             self.active_event = self.active_state["pointer_moving"]
-
+        elif self.event.type == pygame.MOUSEBUTTONUP or self.event.type == pygame.FINGERUP:
+            self.active_event = self.active_state["pointer_up"]
 
     def execute_event(self):
         if self.active_event is not None:
@@ -178,6 +182,23 @@ class EventManager:
 
     def exit(self, *args, **kwargs):
         self.coordinator.running = False
+
+    def check_dragged(self, *args, **kwargs):
+        hits = []
+        for s in self.coordinator.draw_manager.registry:
+            if not isinstance(s, Sprite):
+                continue
+            if self.point_in_sprite(s):
+                hits.append(s)
+
+        def z_keys(_s):
+            return _s.depth, self.coordinator.draw_manager.registry.index(_s)
+
+        clicked = max(hits, key=z_keys)
+        if not clicked:
+            return
+
+        self.dragged_sprite = clicked
 
     def check_clicked(self, *args, **kwargs):
         _type = kwargs.get("type")
@@ -313,6 +334,9 @@ class EventManager:
         self.unfocus_current_icon()
         self.active_state = self.state_dict["main"]
         self.state = "main"
+
+    def undrag(self, *args, **kwargs):
+        self.dragged_sprite = None
 
     def move_sprite(self, *args, **kwargs):
         if self.dragged_sprite:
