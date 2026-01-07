@@ -166,14 +166,14 @@ OUTPUT_SCHEMAS = {
 ARROW_SCHEMAS = {
     "medium": {
          "quick": {
-            "large_hand_incr_arrow": ((40, 15), "large_quick_on_hand", +1),
-            "large_hand_decr_arrow": ((40, 115), "large_quick_on_hand", -1),
-            "large_par_incr_arrow":  ((230, 15), "large_quick_par", +1),
-            "large_par_decr_arrow":  ((230, 115), "large_quick_par", -1),
-            "small_hand_incr_arrow": ((40, 218), "small_quick_on_hand", +1),
-            "small_hand_decr_arrow": ((40, 318), "small_quick_on_hand", -1),
-            "small_par_incr_arrow":  ((230, 218), "small_quick_par", +1),
-            "small_par_decr_arrow":  ((230, 318), "small_quick_par", -1),
+            "large_hand_incr_arrow": ((388, 256), "large_quick_on_hand", +1),
+            "large_hand_decr_arrow": ((300, 256), "large_quick_on_hand", -1),
+            "large_par_incr_arrow":  ((579, 256), "large_quick_par", +1),
+            "large_par_decr_arrow":  ((493, 256), "large_quick_par", -1),
+            "small_hand_incr_arrow": ((388, 375), "small_quick_on_hand", +1),
+            "small_hand_decr_arrow": ((300, 375), "small_quick_on_hand", -1),
+            "small_par_incr_arrow":  ((579, 375), "small_quick_par", +1),
+            "small_par_decr_arrow":  ((493, 375), "small_quick_par", -1),
         },
         "walk_in": {
 
