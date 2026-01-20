@@ -289,6 +289,7 @@ class DetailsWindow:
             self.output_y = (self.y - self.max_h if self.max_h != 0 else self.y) + self.buffer
             w = int(max(self.max_w, self.w) * .57)
             h = int(max(self.max_h, self.h) * .915)
+            #303, 190
         else:
             self.output_x = (self.x - self.max_w if self.max_w != 0 else self.x) + self.buffer
             self.output_y = (self.y - self.max_h if self.max_h != 0 else self.y) * 4
@@ -471,14 +472,13 @@ class OutputBox:
 
     def build_arrows(self):
         coordinator = self.window.icon.coordinator
-        w = self.decr_arrow.surface.get_width()
-        h = self.decr_arrow.surface.get_height()
+
         def generate_arrow(_label, schema):
             x = schema[0][0]
             y = schema[0][1]
-            rect = pygame.Rect(x, y, w, h)
             attr = schema[1]
             delta = schema[2]
+
             if self.res_type == "medium":
                 if "incr" in _label:
                     img_name = "incr_arrow_right.png"
@@ -493,7 +493,12 @@ class OutputBox:
                 else:
                     img_name = "decr_arrow.png"
                     surface = self.decr_arrow.surface
-            arrow = Arrow(self, rect, attr, delta, coordinator, label, img_name, surface)
+
+            w = surface.get_width()
+            h = surface.get_height()
+            rect = pygame.Rect(x, y, w, h)
+
+            arrow = Arrow(self, rect, attr, delta, coordinator, _label, img_name, surface)
             arrow.sprite.type = self.sprite_type
             self.arrows.append(arrow)
 

@@ -121,7 +121,7 @@ class EventManager:
             },
             "flavor_focused": {
                 "exit": self.exit,
-                "pointer_down": self.check_dragged,
+                "pointer_down": self.check_clicked,
                 "pointer_moving": self.move_sprite,
                 "pointer_up": self.undrag
             }

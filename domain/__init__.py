@@ -1,6 +1,5 @@
 import math
 import os
-import traceback
 from openpyxl import load_workbook
 from datetime import datetime
 from types import SimpleNamespace
